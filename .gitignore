@@ -1,0 +1,12 @@
+bin/
+obj/
+dist/
+Logs/
+Screenshots/
+Recordings/
+*.user
+*.suo
+*.pdb
+.vs/
+.ffmpeg-static-inspect/
+_patch_test.tmp
