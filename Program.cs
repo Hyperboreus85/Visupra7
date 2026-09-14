@@ -17,14 +17,14 @@ namespace Visupra7
             Localization.SetLanguage(settings.Language);
             using (var log = new Logger(settings.LogFolder))
             {
-                Application.ThreadException += delegate(object s, ThreadExceptionEventArgs e) { log.Error("Eccezione UI non gestita", e.Exception); };
-                AppDomain.CurrentDomain.UnhandledException += delegate(object s, UnhandledExceptionEventArgs e) { log.Error("Eccezione non gestita", e.ExceptionObject as Exception); };
+                Application.ThreadException += delegate(object s, ThreadExceptionEventArgs e) { log.Error("Unhandled UI exception", e.Exception); };
+                AppDomain.CurrentDomain.UnhandledException += delegate(object s, UnhandledExceptionEventArgs e) { log.Error("Unhandled exception", e.ExceptionObject as Exception); };
                 AssemblyName name = Assembly.GetExecutingAssembly().GetName();
-                log.Info("Avvio " + name.Name + " " + name.Version);
-                log.Info("Sistema operativo: " + Environment.OSVersion + "; processo: " + (IntPtr.Size * 8) + " bit; CLR: " + Environment.Version);
+                log.Info("Starting " + name.Name + " " + name.Version);
+                log.Info("Operating system: " + Environment.OSVersion + "; process: " + (IntPtr.Size * 8) + " bit; CLR: " + Environment.Version);
                 try { Application.Run(new MainForm(settings, log)); }
-                catch (Exception ex) { log.Error("Errore fatale", ex); MessageBox.Show(ex.Message, "Visupra7 - errore", MessageBoxButtons.OK, MessageBoxIcon.Error); }
-                finally { log.Info("Chiusura applicazione"); }
+                catch (Exception ex) { log.Error("Fatal error", ex); MessageBox.Show(ex.Message, "Visupra7 - errore", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                finally { log.Info("Application closing"); }
             }
         }
     }

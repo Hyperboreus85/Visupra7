@@ -49,7 +49,7 @@ namespace Visupra7
             {
                 devEnum = (ICreateDevEnum)new SystemDeviceEnum(); Guid category = Guids.VideoInputDeviceCategory;
                 int hr = devEnum.CreateClassEnumerator(ref category, out enumMoniker, 0);
-                if (hr != 0 || enumMoniker == null) { log.Info(Localization.T("NoCameraDetected")); return devices; }
+                if (hr != 0 || enumMoniker == null) { log.Info("No webcam detected"); return devices; }
                 var values = new IMoniker[1]; IntPtr fetched = Marshal.AllocCoTaskMem(4);
                 try
                 {
@@ -62,15 +62,15 @@ namespace Visupra7
                             object value; if (((IPropertyBag)bagObject).Read("FriendlyName", out value, IntPtr.Zero) == 0) name = Convert.ToString(value);
                             moniker.GetDisplayName(null, null, out display);
                             devices.Add(new WebcamDevice(name, display));
-                            log.Info("Webcam rilevata: " + name + "; moniker: " + display);
+                            log.Info("Webcam detected: " + name + "; moniker: " + display);
                         }
-                        catch (Exception ex) { log.Error("Errore nella lettura di una webcam", ex); }
+                        catch (Exception ex) { log.Error("Error reading webcam", ex); }
                         finally { DsUtil.Release(bagObject); DsUtil.Release(moniker); }
                     }
                 }
                 finally { Marshal.FreeCoTaskMem(fetched); }
             }
-            catch (Exception ex) { log.Error("Enumerazione webcam fallita", ex); }
+            catch (Exception ex) { log.Error("Webcam enumeration failed", ex); }
             finally { DsUtil.Release(enumMoniker); DsUtil.Release(devEnum); }
             return devices;
         }
@@ -106,7 +106,7 @@ namespace Visupra7
                 }
                 finally { Marshal.FreeCoTaskMem(caps); }
             }
-            catch (Exception ex) { log.Error("Lettura formati webcam fallita", ex); }
+            catch (Exception ex) { log.Error("Reading webcam formats failed", ex); }
             finally { DsUtil.Release(configObject); if (tempGraph != null && tempSource != null) tempGraph.RemoveFilter(tempSource); DsUtil.Release(tempSource); DsUtil.Release(tempBuilder); DsUtil.Release(tempGraph); }
             return result;
         }
@@ -123,13 +123,13 @@ namespace Visupra7
                 DsUtil.Check(grabber.SetMediaType(requested), "SetMediaType RGB24"); DsUtil.Check(grabber.SetBufferSamples(false), "SetBufferSamples"); DsUtil.Check(grabber.SetOneShot(false), "SetOneShot");
                 DsUtil.Check(graph.AddFilter(grabberFilter, "Frame Grabber"), "AddFilter grabber");
                 Guid preview = Guids.Preview, video = Guids.Video; int hr = builder.RenderStream(ref preview, ref video, source, grabberFilter, null);
-                if (hr < 0) { log.Warn("Pin Preview non disponibile; uso il pin Capture"); Guid capture = Guids.Capture; DsUtil.Check(builder.RenderStream(ref capture, ref video, source, grabberFilter, null), "RenderStream Capture"); }
+                if (hr < 0) { log.Warn("Preview pin unavailable; using Capture pin"); Guid capture = Guids.Capture; DsUtil.Check(builder.RenderStream(ref capture, ref video, source, grabberFilter, null), "RenderStream Capture"); }
                 ReadConnectedFormat(); DsUtil.Check(grabber.SetCallback(this, 1), "SetCallback"); mediaControl = (IMediaControl)graph; videoWindow = graph as IVideoWindow; mediaEvent = graph as IMediaEventEx;
                 if (videoWindow == null) throw new InvalidOperationException("Il renderer DirectShow non espone IVideoWindow.");
                 const int WS_CHILD = 0x40000000, WS_CLIPSIBLINGS = 0x04000000, WS_CLIPCHILDREN = 0x02000000;
                 DsUtil.Check(videoWindow.put_Owner(previewHandle), "Owner anteprima"); DsUtil.Check(videoWindow.put_WindowStyle(WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN), "Stile anteprima");
-                videoWindow.SetWindowPosition(0, 0, Math.Max(1, previewWidth), Math.Max(1, previewHeight)); videoWindow.put_Visible(-1); acceptingFrames = true; log.Info("Graph DirectShow configurato; avvio streaming"); DsUtil.Check(mediaControl.Run(), "Avvio graph");
-                log.Info("Webcam avviata: " + device.Name + "; formato: " + width + "x" + height + " @ " + Fps + " fps; RGB24 stride " + stride);
+                videoWindow.SetWindowPosition(0, 0, Math.Max(1, previewWidth), Math.Max(1, previewHeight)); videoWindow.put_Visible(-1); acceptingFrames = true; log.Info("DirectShow graph configured; starting stream"); DsUtil.Check(mediaControl.Run(), "Avvio graph");
+                log.Info("Webcam started: " + device.Name + "; format: " + width + "x" + height + " @ " + Fps + " fps; RGB24 stride " + stride);
             }
             catch { Stop(); throw; }
         }
@@ -183,12 +183,12 @@ namespace Visupra7
         public void Stop()
         {
             bool wasRunning = graph != null; acceptingFrames = false; try { if (grabber != null) grabber.SetCallback(null, 0); } catch { }
-            try { if (mediaControl != null) mediaControl.Stop(); } catch (Exception ex) { log.Error("Errore arresto graph", ex); }
+            try { if (mediaControl != null) mediaControl.Stop(); } catch (Exception ex) { log.Error("Graph stop error", ex); }
             try { if (videoWindow != null) { videoWindow.put_Visible(0); videoWindow.put_Owner(IntPtr.Zero); } } catch { }
             lock (frameSync) { latest = null; }
             DsUtil.Release(mediaEvent); DsUtil.Release(videoWindow); DsUtil.Release(mediaControl); DsUtil.Release(grabber); DsUtil.Release(grabberFilter); DsUtil.Release(source); DsUtil.Release(builder); DsUtil.Release(graph);
             mediaEvent = null; videoWindow = null; mediaControl = null; grabber = null; grabberFilter = null; source = null; builder = null; graph = null; width = height = stride = 0; Fps = 0;
-            if (wasRunning) log.Info("Webcam fermata");
+            if (wasRunning) log.Info("Webcam stopped");
         }
 
         int ISampleGrabberCB.SampleCB(double sampleTime, IntPtr sample) { return 0; }

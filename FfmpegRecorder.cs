@@ -39,8 +39,8 @@ namespace Visupra7
                     " -pix_fmt yuv420p -movflags +faststart -y \"" + outputPath + "\"";
                 var start = new ProcessStartInfo(settings.FfmpegPath, arguments) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardError = true, WorkingDirectory = settings.BaseFolder };
                 process = new Process { StartInfo = start, EnableRaisingEvents = true }; process.ErrorDataReceived += OnErrorData;
-                log.Info("Avvio registrazione: " + outputPath); log.Info("Comando FFmpeg: \"" + settings.FfmpegPath + "\" " + arguments);
-                try { if (!process.Start()) throw new InvalidOperationException("Impossibile avviare FFmpeg."); process.BeginErrorReadLine(); log.Info("PID FFmpeg: " + process.Id); }
+                log.Info("Starting recording: " + outputPath); log.Info("FFmpeg command: \"" + settings.FfmpegPath + "\" " + arguments);
+                try { if (!process.Start()) throw new InvalidOperationException("Unable to start FFmpeg."); process.BeginErrorReadLine(); log.Info("PID FFmpeg: " + process.Id); }
                 catch { process.Dispose(); process = null; throw; }
                 queue = new BlockingCollection<FrameData>(4); accepting = true; duration = Stopwatch.StartNew(); writerTask = Task.Run((Action)WriterLoop);
             }
@@ -68,7 +68,7 @@ namespace Visupra7
                 }
                 input.Flush(); process.StandardInput.Close();
             }
-            catch (Exception ex) { log.Error("Pipeline FFmpeg interrotta", ex); var handler = Failed; if (handler != null) handler(ex.Message); }
+            catch (Exception ex) { log.Error("FFmpeg pipeline interrupted", ex); var handler = Failed; if (handler != null) handler(ex.Message); }
         }
 
         public Task<RecordingResult> StopAsync()
@@ -85,14 +85,14 @@ namespace Visupra7
                 }
                 try
                 {
-                    if (localWriter != null && !localWriter.Wait(5000)) { log.Warn("Timeout svuotamento coda FFmpeg; termino il processo"); TryKill(localProcess); }
-                    if (!localProcess.HasExited && !localProcess.WaitForExit(10000)) { log.Warn("Timeout finalizzazione MP4; termino FFmpeg"); TryKill(localProcess); localProcess.WaitForExit(2000); }
+                    if (localWriter != null && !localWriter.Wait(5000)) { log.Warn("FFmpeg queue flush timed out; terminating process"); TryKill(localProcess); }
+                    if (!localProcess.HasExited && !localProcess.WaitForExit(10000)) { log.Warn("MP4 finalization timed out; terminating FFmpeg"); TryKill(localProcess); localProcess.WaitForExit(2000); }
                     result.Success = File.Exists(result.Path) && new FileInfo(result.Path).Length > 0 && localProcess.ExitCode == 0;
                     if (File.Exists(result.Path)) result.Size = new FileInfo(result.Path).Length;
-                    if (!result.Success) result.Error = "FFmpeg non ha prodotto un MP4 valido (exit code " + (localProcess.HasExited ? localProcess.ExitCode.ToString() : "timeout") + ").";
-                    log.Info("Stop registrazione; durata " + result.Duration + "; frame scartati " + dropped + "; file " + result.Path + "; dimensione " + result.Size + " byte; esito " + result.Success);
+                    if (!result.Success) result.Error = "FFmpeg did not produce a valid MP4 (exit code " + (localProcess.HasExited ? localProcess.ExitCode.ToString() : "timeout") + ").";
+                    log.Info("Recording stopped; duration " + result.Duration + "; dropped frames " + dropped + "; file " + result.Path + "; size " + result.Size + " byte; success " + result.Success);
                 }
-                catch (Exception ex) { result.Error = ex.Message; log.Error("Errore durante stop registrazione", ex); TryKill(localProcess); }
+                catch (Exception ex) { result.Error = ex.Message; log.Error("Recording stop error", ex); TryKill(localProcess); }
                 finally
                 {
                     lock (sync) { localProcess.Dispose(); localQueue.Dispose(); process = null; queue = null; writerTask = null; duration = null; }

@@ -81,7 +81,7 @@ namespace Visupra7.DirectShow
         [PreserveSig] int FindPin([MarshalAs(UnmanagedType.IUnknown)] object source, int direction, [In] ref Guid category, [In] ref Guid type, [MarshalAs(UnmanagedType.Bool)] bool unconnected, int index, out IntPtr pin);
     }
 
-    [ComImport, InterfaceType(ComInterfaceType.InterfaceIsIUnknown), Guid("56A868B1-0AD4-11CE-B03A-0020AF0BA770")]
+    [ComImport, InterfaceType(ComInterfaceType.InterfaceIsDual), Guid("56A868B1-0AD4-11CE-B03A-0020AF0BA770")]
     internal interface IMediaControl
     {
         [PreserveSig] int Run(); [PreserveSig] int Pause(); [PreserveSig] int Stop();

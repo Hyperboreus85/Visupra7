@@ -244,7 +244,7 @@ namespace Visupra7
             window.FormClosing += delegate
             {
                 try { if (capture.IsRunning) capture.AttachPreview(preview.Handle, preview.ClientSize.Width, preview.ClientSize.Height); }
-                catch (Exception ex) { log.Error("Ripristino anteprima dalla modalità fullscreen fallito", ex); }
+                catch (Exception ex) { log.Error("Failed to restore preview after full screen", ex); }
                 fullscreenWindow = null; SetState(Localization.T(capture.IsRunning ? "PreviewRestored" : "CameraStopped"));
             };
             try
@@ -252,7 +252,7 @@ namespace Visupra7
                 window.Show(this); capture.AttachPreview(window.PreviewHandle, window.PreviewSize.Width, window.PreviewSize.Height); window.Activate();
                 SetState(Localization.T("FullscreenState"));
             }
-            catch (Exception ex) { log.Error("Apertura modalità fullscreen fallita", ex); window.Close(); MessageBox.Show(DialogOwner, ex.Message, Localization.T("FullscreenError"), MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            catch (Exception ex) { log.Error("Failed to open full screen", ex); window.Close(); MessageBox.Show(DialogOwner, ex.Message, Localization.T("FullscreenError"), MessageBoxButtons.OK, MessageBoxIcon.Warning); }
         }
 
         private IWin32Window DialogOwner { get { return fullscreenWindow == null ? (IWin32Window)this : fullscreenWindow; } }
@@ -289,7 +289,7 @@ namespace Visupra7
         {
             formats.Items.Clear(); WebcamDevice selected = devices.SelectedItem as WebcamDevice; if (selected == null || capture.IsRunning) return;
             formats.Items.Add(Localization.T("DefaultFormat")); formats.SelectedIndex = 0;
-            log.Info("Uso del formato predefinito della webcam; interrogazione capability DirectShow disabilitata per compatibilità Windows 7.");
+            log.Info("Using the default webcam format; DirectShow capability query is disabled for Windows 7 compatibility.");
             UpdateButtons();
         }
 
@@ -306,7 +306,7 @@ namespace Visupra7
             }
             catch (Exception ex)
             {
-                log.Error("Avvio webcam fallito (dispositivo occupato, scollegato o formato non supportato)", ex); MessageBox.Show(DialogOwner, Localization.T("CameraStartBody", ex.Message), "Visupra7", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                log.Error("Webcam start failed (device busy, disconnected, or unsupported format)", ex); MessageBox.Show(DialogOwner, Localization.T("CameraStartBody", ex.Message), "Visupra7", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 SetConnectionState(Localization.T("Error"), Danger); SetState(Localization.T("CameraStartError"));
             }
             finally { SetBusy(false); UpdateButtons(); }
@@ -322,8 +322,8 @@ namespace Visupra7
         {
             FrameData frame = capture.GetLatestFrame(); if (frame == null) { MessageBox.Show(DialogOwner, Localization.T("WaitFirstFrame"), "Visupra7", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             screenshot.Enabled = false;
-            try { string path = await Task.Run(delegate { return SaveJpeg(frame); }); log.Info("Screenshot salvato: " + path); SetState(Localization.T("ScreenshotSaved", Path.GetFileName(path))); }
-            catch (Exception ex) { log.Error("Screenshot fallito", ex); MessageBox.Show(DialogOwner, ex.Message, Localization.T("ScreenshotError"), MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            try { string path = await Task.Run(delegate { return SaveJpeg(frame); }); log.Info("Screenshot saved: " + path); SetState(Localization.T("ScreenshotSaved", Path.GetFileName(path))); }
+            catch (Exception ex) { log.Error("Screenshot failed", ex); MessageBox.Show(DialogOwner, ex.Message, Localization.T("ScreenshotError"), MessageBoxButtons.OK, MessageBoxIcon.Error); }
             finally { screenshot.Enabled = true; }
         }
 
@@ -344,7 +344,7 @@ namespace Visupra7
         private void StartRecording()
         {
             try { FrameData frame = capture.GetLatestFrame(); if (frame == null) throw new InvalidOperationException(Localization.T("WaitFirstFrame")); recorder.Start(frame.Width, frame.Height, capture.Fps, frame.BottomUp); SetState(Localization.T("RecordingStarted", Path.GetFileName(recorder.OutputPath))); }
-            catch (Exception ex) { log.Error("Avvio registrazione fallito", ex); MessageBox.Show(DialogOwner, ex.Message, Localization.T("RecordingNotStarted"), MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { log.Error("Recording start failed", ex); MessageBox.Show(DialogOwner, ex.Message, Localization.T("RecordingNotStarted"), MessageBoxButtons.OK, MessageBoxIcon.Error); }
             UpdateButtons();
         }
 
@@ -358,7 +358,7 @@ namespace Visupra7
         private void TimerTick(object sender, EventArgs e)
         {
             rec.Visible = recorder.IsRecording; elapsed.Text = recorder.IsRecording ? recorder.Elapsed.ToString(@"hh\:mm\:ss") : "00:00:00"; if (fullscreenWindow != null) fullscreenWindow.SetRecording(recorder.IsRecording, recorder.Elapsed);
-            if (capture.IsRunning && capture.PollDeviceLost()) { log.Warn("Perdita dispositivo o completamento inatteso del graph"); SetState(Localization.T("DeviceLost")); SetConnectionState(Localization.T("SignalLost"), Danger); Task ignoredStop = StopCamera(); }
+            if (capture.IsRunning && capture.PollDeviceLost()) { log.Warn("Device disconnected or graph completed unexpectedly"); SetState(Localization.T("DeviceLost")); SetConnectionState(Localization.T("SignalLost"), Danger); Task ignoredStop = StopCamera(); }
         }
 
         private void SetConnectionState(string value, Color color) { connectionState.Text = value; connectionState.ForeColor = color; }
@@ -373,9 +373,9 @@ namespace Visupra7
 
         private void OnClosing(object sender, FormClosingEventArgs e)
         {
-            if (closing) return; closing = true; timer.Stop(); if (fullscreenWindow != null) fullscreenWindow.Close(); Enabled = false; log.Info("Chiusura richiesta; rilascio registrazione e webcam");
-            try { if (recorder.IsRecording) recorder.StopAsync().Wait(18000); } catch (Exception ex) { log.Error("Errore chiusura registrazione", ex); }
-            try { capture.Stop(); } catch (Exception ex) { log.Error("Errore chiusura webcam", ex); }
+            if (closing) return; closing = true; timer.Stop(); if (fullscreenWindow != null) fullscreenWindow.Close(); Enabled = false; log.Info("Closing requested; releasing recording and webcam");
+            try { if (recorder.IsRecording) recorder.StopAsync().Wait(18000); } catch (Exception ex) { log.Error("Recording shutdown error", ex); }
+            try { capture.Stop(); } catch (Exception ex) { log.Error("Webcam shutdown error", ex); }
             foreach (WebcamDevice d in deviceList) d.Dispose(); recorder.Dispose(); capture.Dispose(); log.LineWritten -= AppendLog;
         }
 
