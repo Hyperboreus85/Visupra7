@@ -130,7 +130,7 @@ namespace Visupra7.DirectShow
     internal interface IAMStreamConfig
     {
         [PreserveSig] int SetFormat([In] AMMediaType mediaType); [PreserveSig] int GetFormat([Out] out AMMediaType mediaType);
-        [PreserveSig] int GetNumberOfCapabilities(out int count, out int size); [PreserveSig] int GetStreamCaps(int index, [Out] AMMediaType mediaType, IntPtr caps);
+        [PreserveSig] int GetNumberOfCapabilities(out int count, out int size); [PreserveSig] int GetStreamCaps(int index, [Out] out AMMediaType mediaType, IntPtr caps);
     }
 
     [StructLayout(LayoutKind.Sequential)]

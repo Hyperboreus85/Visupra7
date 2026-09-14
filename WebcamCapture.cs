@@ -85,15 +85,16 @@ namespace Visupra7
                 Guid category = Guids.Capture, type = Guids.Video, iid = Guids.IamStreamConfig;
                 DsUtil.Check(tempBuilder.FindInterface(ref category, ref type, tempSource, ref iid, out configObject), "FindInterface IAMStreamConfig");
                 IAMStreamConfig config = (IAMStreamConfig)configObject; int count, capSize; DsUtil.Check(config.GetNumberOfCapabilities(out count, out capSize), "GetNumberOfCapabilities");
-                IntPtr caps = Marshal.AllocCoTaskMem(Math.Max(capSize, 1));
+                if (count < 0 || count > 4096 || capSize <= 0 || capSize > 4096) throw new InvalidOperationException("DirectShow ha restituito dati formato non validi.");
+                IntPtr caps = Marshal.AllocCoTaskMem(capSize);
                 try
                 {
                     for (int i = 0; i < count; i++)
                     {
-                        var mt = new AMMediaType();
+                        AMMediaType mt = null;
                         try
                         {
-                            if (config.GetStreamCaps(i, mt, caps) == 0 && mt.formatType == Guids.VideoInfo && mt.formatPtr != IntPtr.Zero)
+                            if (config.GetStreamCaps(i, out mt, caps) == 0 && mt != null && mt.formatType == Guids.VideoInfo && mt.formatPtr != IntPtr.Zero)
                             {
                                 var vih = (VideoInfoHeader)Marshal.PtrToStructure(mt.formatPtr, typeof(VideoInfoHeader)); int fps = vih.AvgTimePerFrame > 0 ? (int)Math.Round(10000000.0 / vih.AvgTimePerFrame) : 0;
                                 int h = Math.Abs(vih.BmiHeader.Height); bool duplicate = result.Exists(delegate(VideoFormat f) { return f.Width == vih.BmiHeader.Width && f.Height == h && f.Fps == fps; });
@@ -140,8 +141,9 @@ namespace Visupra7
             {
                 DsUtil.Check(builder.FindInterface(ref category, ref type, source, ref iid, out configObject), "FindInterface IAMStreamConfig");
                 IAMStreamConfig config = (IAMStreamConfig)configObject; int count, capSize; DsUtil.Check(config.GetNumberOfCapabilities(out count, out capSize), "GetNumberOfCapabilities");
-                IntPtr caps = Marshal.AllocCoTaskMem(Math.Max(capSize, 1)); var mt = new AMMediaType();
-                try { DsUtil.Check(config.GetStreamCaps(selected.CapabilityIndex, mt, caps), "GetStreamCaps"); DsUtil.Check(config.SetFormat(mt), "SetFormat"); }
+                if (selected.CapabilityIndex < 0 || selected.CapabilityIndex >= count || capSize <= 0 || capSize > 4096) throw new InvalidOperationException("Il formato video selezionato non è più disponibile.");
+                IntPtr caps = Marshal.AllocCoTaskMem(capSize); AMMediaType mt = null;
+                try { DsUtil.Check(config.GetStreamCaps(selected.CapabilityIndex, out mt, caps), "GetStreamCaps"); if (mt == null) throw new InvalidOperationException("DirectShow non ha restituito il formato video."); DsUtil.Check(config.SetFormat(mt), "SetFormat"); }
                 finally { DsUtil.FreeMediaType(mt); Marshal.FreeCoTaskMem(caps); }
             }
             finally { DsUtil.Release(configObject); }
