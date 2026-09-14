@@ -127,7 +127,7 @@ namespace Visupra7
                 if (videoWindow == null) throw new InvalidOperationException("Il renderer DirectShow non espone IVideoWindow.");
                 const int WS_CHILD = 0x40000000, WS_CLIPSIBLINGS = 0x04000000, WS_CLIPCHILDREN = 0x02000000;
                 DsUtil.Check(videoWindow.put_Owner(previewHandle), "Owner anteprima"); DsUtil.Check(videoWindow.put_WindowStyle(WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN), "Stile anteprima");
-                videoWindow.SetWindowPosition(0, 0, Math.Max(1, previewWidth), Math.Max(1, previewHeight)); videoWindow.put_Visible(-1); acceptingFrames = true; DsUtil.Check(mediaControl.Run(), "Avvio graph");
+                videoWindow.SetWindowPosition(0, 0, Math.Max(1, previewWidth), Math.Max(1, previewHeight)); videoWindow.put_Visible(-1); acceptingFrames = true; log.Info("Graph DirectShow configurato; avvio streaming"); DsUtil.Check(mediaControl.Run(), "Avvio graph");
                 log.Info("Webcam avviata: " + device.Name + "; formato: " + width + "x" + height + " @ " + Fps + " fps; RGB24 stride " + stride);
             }
             catch { Stop(); throw; }

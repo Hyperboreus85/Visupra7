@@ -302,7 +302,8 @@ namespace Visupra7
             SetBusy(true); SetState(Localization.T("StartingCamera")); SetConnectionState(Localization.T("Connecting"), Accent);
             try
             {
-                await Task.Run(delegate { capture.Start(device, format, preview.Handle, preview.ClientSize.Width, preview.ClientSize.Height); });
+                await Task.Yield();
+                capture.Start(device, format, preview.Handle, preview.ClientSize.Width, preview.ClientSize.Height);
                 previewPlaceholder.Visible = false; formatInfo.Text = capture.Width + " × " + capture.Height + "  /  " + capture.Fps + " FPS";
                 SetConnectionState(Localization.T("Live"), Success); SetState(Localization.T("PreviewActive", device.Name));
             }
@@ -316,7 +317,7 @@ namespace Visupra7
 
         private async Task StopCamera()
         {
-            if (fullscreenWindow != null) fullscreenWindow.Close(); SetBusy(true); if (recorder.IsRecording) await StopRecording(); SetState(Localization.T("StoppingCamera")); await Task.Run(delegate { capture.Stop(); });
+            if (fullscreenWindow != null) fullscreenWindow.Close(); SetBusy(true); if (recorder.IsRecording) await StopRecording(); SetState(Localization.T("StoppingCamera")); capture.Stop();
             previewPlaceholder.Visible = true; previewPlaceholder.BringToFront(); formatInfo.Text = Localization.T("NoSignal"); SetConnectionState(Localization.T("Offline"), TextMuted); SetState(Localization.T("CameraStopped")); SetBusy(false); UpdateButtons();
         }
 
