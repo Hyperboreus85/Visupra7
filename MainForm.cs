@@ -285,15 +285,12 @@ namespace Visupra7
             SetConnectionState(devices.Items.Count == 0 ? Localization.T("NoCamera") : Localization.T("Ready"), devices.Items.Count == 0 ? Danger : Success); detect.Enabled = true; UpdateButtons();
         }
 
-        private async void LoadFormats()
+        private void LoadFormats()
         {
             formats.Items.Clear(); WebcamDevice selected = devices.SelectedItem as WebcamDevice; if (selected == null || capture.IsRunning) return;
-            formats.Items.Add(Localization.T("DefaultFormat")); formats.SelectedIndex = 0; devices.Enabled = false;
-            List<VideoFormat> values = await Task.Run(delegate { return WebcamCapture.GetFormats(selected, log); });
-            foreach (VideoFormat f in values) formats.Items.Add(f);
-            int best = 0, bestScore = int.MaxValue;
-            for (int i = 0; i < values.Count; i++) { int score = Math.Abs(values[i].Width - settings.PreferredWidth) + Math.Abs(values[i].Height - settings.PreferredHeight); if (score < bestScore) { bestScore = score; best = i + 1; } }
-            if (formats.Items.Count > 1) formats.SelectedIndex = best; devices.Enabled = true; UpdateButtons();
+            formats.Items.Add(Localization.T("DefaultFormat")); formats.SelectedIndex = 0;
+            log.Info("Uso del formato predefinito della webcam; interrogazione capability DirectShow disabilitata per compatibilità Windows 7.");
+            UpdateButtons();
         }
 
         private async Task StartCamera()
