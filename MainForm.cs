@@ -37,6 +37,7 @@ namespace Visupra7
         private readonly ModernButton stopRecord = new ModernButton();
         private readonly ModernButton toggleLog = new ModernButton();
         private readonly ModernButton fullscreen = new ModernButton();
+        private readonly ComboBox language = new ComboBox();
         private readonly Panel preview = new Panel();
         private readonly Label previewPlaceholder = new Label();
         private readonly TextBox logBox = new TextBox();
@@ -74,6 +75,7 @@ namespace Visupra7
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
 
             BuildUi();
+            ApplyTranslations();
             WireEvents();
             log.LineWritten += AppendLog;
             timer.Interval = 250;
@@ -97,7 +99,7 @@ namespace Visupra7
             var header = new Panel { Dock = DockStyle.Top, Height = 76, BackColor = Color.FromArgb(17, 22, 29), Padding = new Padding(20, 0, 20, 0) };
             var mark = new LogoMark { Location = new Point(20, 17), Size = new Size(42, 42) };
             var title = MakeLabel("VISUPRA7", 19F, FontStyle.Bold, TextMain); title.Location = new Point(76, 13); title.AutoSize = true;
-            var subtitle = MakeLabel("CAMERA STUDIO  /  WINDOWS 7", 8F, FontStyle.Bold, TextMuted); subtitle.Location = new Point(79, 46); subtitle.AutoSize = true;
+            var subtitle = MakeLabel("", 8F, FontStyle.Bold, TextMuted); subtitle.Location = new Point(79, 46); subtitle.AutoSize = true; Localization.Bind(subtitle, "AppSubtitle");
 
             elapsed.Text = "00:00:00"; elapsed.Font = new Font("Consolas", 16F, FontStyle.Bold); elapsed.ForeColor = TextMain;
             elapsed.TextAlign = ContentAlignment.MiddleRight; elapsed.Dock = DockStyle.Right; elapsed.Width = 118;
@@ -105,9 +107,13 @@ namespace Visupra7
             rec.TextAlign = ContentAlignment.MiddleCenter; rec.Dock = DockStyle.Right; rec.Width = 82; rec.Margin = new Padding(0, 22, 12, 22); rec.Visible = false;
             connectionState.Text = "OFFLINE"; connectionState.Font = new Font("Segoe UI", 8F, FontStyle.Bold); connectionState.ForeColor = TextMuted;
             connectionState.TextAlign = ContentAlignment.MiddleCenter; connectionState.Dock = DockStyle.Right; connectionState.Width = 108;
+            var languagePanel = new Panel { Dock = DockStyle.Right, Width = 152, BackColor = Color.Transparent };
+            var languageLabel = MakeLabel("", 7.5F, FontStyle.Bold, TextMuted); languageLabel.Location = new Point(8, 10); languageLabel.AutoSize = true; Localization.Bind(languageLabel, "Language");
+            ConfigureCombo(language); language.Location = new Point(7, 31); language.Size = new Size(132, 25); language.Items.Add("English"); language.Items.Add("Italiano"); language.SelectedIndex = Localization.CurrentCode == "it" ? 1 : 0;
+            languagePanel.Controls.Add(languageLabel); languagePanel.Controls.Add(language);
 
             header.Paint += delegate(object sender, PaintEventArgs e) { using (var pen = new Pen(Border)) e.Graphics.DrawLine(pen, 0, header.Height - 1, header.Width, header.Height - 1); };
-            header.Controls.Add(elapsed); header.Controls.Add(rec); header.Controls.Add(connectionState); header.Controls.Add(mark); header.Controls.Add(title); header.Controls.Add(subtitle);
+            header.Controls.Add(elapsed); header.Controls.Add(rec); header.Controls.Add(connectionState); header.Controls.Add(languagePanel); header.Controls.Add(mark); header.Controls.Add(title); header.Controls.Add(subtitle);
             return header;
         }
 
@@ -136,6 +142,7 @@ namespace Visupra7
             detect.Text = "RILEVA WEBCAM"; detect.Location = new Point(18, 105); detect.Size = new Size(238, 34); detect.BaseColor = SurfaceLight; detect.HoverColor = Color.FromArgb(39, 50, 64);
             var formatLabel = MakeLabel("Formato video", 8.5F, FontStyle.Regular, TextMuted); formatLabel.Location = new Point(18, 151); formatLabel.AutoSize = true;
             ConfigureCombo(formats); formats.Location = new Point(18, 173); formats.Size = new Size(238, 28);
+            Localization.Bind(heading, "SourceVideo"); Localization.Bind(cameraLabel, "Webcam"); Localization.Bind(detect, "DetectWebcam"); Localization.Bind(formatLabel, "VideoFormat");
             card.Controls.Add(heading); card.Controls.Add(cameraLabel); card.Controls.Add(devices); card.Controls.Add(detect); card.Controls.Add(formatLabel); card.Controls.Add(formats);
             return card;
         }
@@ -150,6 +157,7 @@ namespace Visupra7
             record.Text = "●   AVVIA REGISTRAZIONE"; record.Location = new Point(18, 149); record.Size = new Size(238, 42); record.BaseColor = Danger; record.HoverColor = Color.FromArgb(250, 88, 105);
             stopRecord.Text = "■   TERMINA E SALVA MP4"; stopRecord.Location = new Point(18, 199); stopRecord.Size = new Size(238, 40); stopRecord.BaseColor = Color.FromArgb(68, 44, 50); stopRecord.HoverColor = Color.FromArgb(88, 49, 58);
             var hint = MakeLabel("L'anteprima resta attiva anche se\nl'encoder incontra un errore.", 8F, FontStyle.Regular, TextMuted); hint.Location = new Point(18, 254); hint.AutoSize = true;
+            Localization.Bind(heading, "Controls"); Localization.Bind(start, "StartPreview"); Localization.Bind(stop, "Stop"); Localization.Bind(screenshot, "TakePhoto"); Localization.Bind(record, "StartRecording"); Localization.Bind(stopRecord, "StopAndSave"); Localization.Bind(hint, "StabilityHint");
             card.Controls.Add(heading); card.Controls.Add(start); card.Controls.Add(stop); card.Controls.Add(screenshot); card.Controls.Add(record); card.Controls.Add(stopRecord); card.Controls.Add(hint);
             return card;
         }
@@ -161,6 +169,8 @@ namespace Visupra7
             var title = MakeLabel("ANTEPRIMA", 9F, FontStyle.Bold, TextMain); title.Dock = DockStyle.Left; title.Width = 100; title.TextAlign = ContentAlignment.MiddleLeft;
             formatInfo.Text = "NESSUN SEGNALE"; formatInfo.Font = new Font("Segoe UI", 8F, FontStyle.Bold); formatInfo.ForeColor = TextMuted; formatInfo.Dock = DockStyle.Right; formatInfo.Width = 190; formatInfo.TextAlign = ContentAlignment.MiddleRight;
             fullscreen.Text = "SCHERMO INTERO"; fullscreen.Dock = DockStyle.Right; fullscreen.Width = 132; fullscreen.BaseColor = Surface; fullscreen.HoverColor = SurfaceLight; fullscreen.ForeColor = TextMuted;
+            Localization.Bind(title, "Preview"); Localization.Bind(fullscreen, "Fullscreen");
+            head.Controls.Add(fullscreen); head.Controls.Add(formatInfo); head.Controls.Add(title);
 
             var previewFrame = new Panel { Dock = DockStyle.Fill, BackColor = Surface, Padding = new Padding(10, 0, 10, 10) };
             preview.Dock = DockStyle.Fill; preview.BackColor = Color.FromArgb(4, 6, 9);
@@ -176,6 +186,7 @@ namespace Visupra7
             var head = new Panel { Dock = DockStyle.Top, Height = 42, BackColor = Surface, Padding = new Padding(14, 0, 10, 0) };
             var title = MakeLabel("LOG DIAGNOSTICO", 8.5F, FontStyle.Bold, TextMain); title.Dock = DockStyle.Left; title.Width = 180; title.TextAlign = ContentAlignment.MiddleLeft;
             toggleLog.Text = "NASCONDI"; toggleLog.Dock = DockStyle.Right; toggleLog.Width = 92; toggleLog.BaseColor = Surface; toggleLog.HoverColor = SurfaceLight; toggleLog.ForeColor = TextMuted;
+            Localization.Bind(title, "DiagnosticLog"); Localization.Bind(toggleLog, "Hide");
             head.Controls.Add(toggleLog); head.Controls.Add(title); return head;
         }
 
@@ -194,6 +205,7 @@ namespace Visupra7
             state.Text = "Pronto"; state.ForeColor = TextMuted; state.Dock = DockStyle.Fill; state.TextAlign = ContentAlignment.MiddleLeft; state.AutoEllipsis = true;
             var version = MakeLabel("VISUPRA7  1.0", 8F, FontStyle.Bold, TextMuted); version.Dock = DockStyle.Right; version.Width = 110; version.TextAlign = ContentAlignment.MiddleRight;
             bar.Paint += delegate(object sender, PaintEventArgs e) { using (var pen = new Pen(Border)) e.Graphics.DrawLine(pen, 0, 0, bar.Width, 0); };
+            Localization.Bind(state, "Ready");
             bar.Controls.Add(state); bar.Controls.Add(dot); bar.Controls.Add(version); return bar;
         }
 
@@ -218,9 +230,9 @@ namespace Visupra7
         {
             detect.Click += delegate { DetectDevices(); }; devices.SelectedIndexChanged += delegate { LoadFormats(); }; start.Click += async delegate { await StartCamera(); };
             stop.Click += async delegate { await StopCamera(); }; screenshot.Click += async delegate { await TakeScreenshot(); }; record.Click += delegate { StartRecording(); };
-            stopRecord.Click += async delegate { await StopRecording(); }; toggleLog.Click += delegate { ToggleLog(); }; fullscreen.Click += delegate { OpenFullscreen(); };
+            stopRecord.Click += async delegate { await StopRecording(); }; toggleLog.Click += delegate { ToggleLog(); }; fullscreen.Click += delegate { OpenFullscreen(); }; language.SelectedIndexChanged += delegate { ChangeLanguage(); };
             preview.Resize += delegate { capture.ResizePreview(preview.ClientSize.Width, preview.ClientSize.Height); }; preview.DoubleClick += delegate { OpenFullscreen(); }; FormClosing += OnClosing;
-            tips.SetToolTip(detect, "Aggiorna l'elenco dei dispositivi DirectShow"); tips.SetToolTip(screenshot, "Salva il frame corrente in formato JPEG"); tips.SetToolTip(record, "Registra MP4 H.264 tramite FFmpeg");
+            tips.SetToolTip(detect, Localization.T("DetectTip")); tips.SetToolTip(screenshot, Localization.T("ScreenshotTip")); tips.SetToolTip(record, Localization.T("RecordTip"));
         }
 
         private void OpenFullscreen()
@@ -233,34 +245,50 @@ namespace Visupra7
             {
                 try { if (capture.IsRunning) capture.AttachPreview(preview.Handle, preview.ClientSize.Width, preview.ClientSize.Height); }
                 catch (Exception ex) { log.Error("Ripristino anteprima dalla modalità fullscreen fallito", ex); }
-                fullscreenWindow = null; SetState(capture.IsRunning ? "Anteprima ripristinata" : "Webcam ferma");
+                fullscreenWindow = null; SetState(Localization.T(capture.IsRunning ? "PreviewRestored" : "CameraStopped"));
             };
             try
             {
                 window.Show(this); capture.AttachPreview(window.PreviewHandle, window.PreviewSize.Width, window.PreviewSize.Height); window.Activate();
-                SetState("Modalità schermo intero · Esc o F11 per uscire");
+                SetState(Localization.T("FullscreenState"));
             }
-            catch (Exception ex) { log.Error("Apertura modalità fullscreen fallita", ex); window.Close(); MessageBox.Show(DialogOwner, ex.Message, "Schermo intero", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            catch (Exception ex) { log.Error("Apertura modalità fullscreen fallita", ex); window.Close(); MessageBox.Show(DialogOwner, ex.Message, Localization.T("FullscreenError"), MessageBoxButtons.OK, MessageBoxIcon.Warning); }
         }
 
         private IWin32Window DialogOwner { get { return fullscreenWindow == null ? (IWin32Window)this : fullscreenWindow; } }
 
-        private void ToggleLog() { logExpanded = !logExpanded; logCard.Height = logExpanded ? 174 : 42; toggleLog.Text = logExpanded ? "NASCONDI" : "MOSTRA"; }
+        private void ChangeLanguage()
+        {
+            Localization.SetLanguage(language.SelectedIndex == 1 ? "it" : "en"); ApplyTranslations();
+            if (formats.Items.Count > 0 && formats.Items[0] is string) formats.Items[0] = Localization.T("DefaultFormat");
+            if (capture.IsRunning) { SetConnectionState(Localization.T("Live"), Success); SetState(Localization.T("PreviewActive", devices.SelectedItem)); }
+            else if (devices.Items.Count == 0) { SetConnectionState(Localization.T("NoCamera"), Danger); SetState(Localization.T("NoCameraDetected")); }
+            else { SetConnectionState(Localization.T("Ready"), Success); SetState(Localization.T("CamerasDetected", devices.Items.Count)); }
+        }
+
+        private void ApplyTranslations()
+        {
+            Localization.Apply(this); previewPlaceholder.Text = Localization.T("NoVideoSource") + "\r\n\r\n" + Localization.T("NoVideoHint");
+            tips.SetToolTip(detect, Localization.T("DetectTip")); tips.SetToolTip(screenshot, Localization.T("ScreenshotTip")); tips.SetToolTip(record, Localization.T("RecordTip"));
+            if (!capture.IsRunning) formatInfo.Text = Localization.T("NoSignal"); toggleLog.Text = Localization.T(logExpanded ? "Hide" : "Show");
+        }
+
+        private void ToggleLog() { logExpanded = !logExpanded; logCard.Height = logExpanded ? 174 : 42; toggleLog.Text = Localization.T(logExpanded ? "Hide" : "Show"); }
 
         private async void DetectDevices()
         {
-            if (capture.IsRunning) return; detect.Enabled = false; SetState("Rilevamento webcam in corso..."); SetConnectionState("RICERCA", TextMuted);
+            if (capture.IsRunning) return; detect.Enabled = false; SetState(Localization.T("Detecting")); SetConnectionState(Localization.T("Searching"), TextMuted);
             foreach (WebcamDevice d in deviceList) d.Dispose(); deviceList.Clear(); devices.Items.Clear(); formats.Items.Clear();
             deviceList = await Task.Run(delegate { return WebcamCapture.Enumerate(log); });
             foreach (WebcamDevice d in deviceList) devices.Items.Add(d); if (devices.Items.Count > 0) devices.SelectedIndex = 0;
-            SetState(devices.Items.Count == 0 ? "Nessuna webcam rilevata" : devices.Items.Count + " webcam rilevate");
-            SetConnectionState(devices.Items.Count == 0 ? "NESSUNA CAMERA" : "PRONTA", devices.Items.Count == 0 ? Danger : Success); detect.Enabled = true; UpdateButtons();
+            SetState(devices.Items.Count == 0 ? Localization.T("NoCameraDetected") : Localization.T("CamerasDetected", devices.Items.Count));
+            SetConnectionState(devices.Items.Count == 0 ? Localization.T("NoCamera") : Localization.T("Ready"), devices.Items.Count == 0 ? Danger : Success); detect.Enabled = true; UpdateButtons();
         }
 
         private async void LoadFormats()
         {
             formats.Items.Clear(); WebcamDevice selected = devices.SelectedItem as WebcamDevice; if (selected == null || capture.IsRunning) return;
-            formats.Items.Add("Predefinito webcam"); formats.SelectedIndex = 0; devices.Enabled = false;
+            formats.Items.Add(Localization.T("DefaultFormat")); formats.SelectedIndex = 0; devices.Enabled = false;
             List<VideoFormat> values = await Task.Run(delegate { return WebcamCapture.GetFormats(selected, log); });
             foreach (VideoFormat f in values) formats.Items.Add(f);
             int best = 0, bestScore = int.MaxValue;
@@ -271,33 +299,33 @@ namespace Visupra7
         private async Task StartCamera()
         {
             WebcamDevice device = devices.SelectedItem as WebcamDevice; if (device == null) return; VideoFormat format = formats.SelectedItem as VideoFormat;
-            SetBusy(true); SetState("Avvio webcam..."); SetConnectionState("CONNESSIONE", Accent);
+            SetBusy(true); SetState(Localization.T("StartingCamera")); SetConnectionState(Localization.T("Connecting"), Accent);
             try
             {
                 await Task.Run(delegate { capture.Start(device, format, preview.Handle, preview.ClientSize.Width, preview.ClientSize.Height); });
                 previewPlaceholder.Visible = false; formatInfo.Text = capture.Width + " × " + capture.Height + "  /  " + capture.Fps + " FPS";
-                SetConnectionState("LIVE", Success); SetState("Anteprima attiva · " + device.Name);
+                SetConnectionState(Localization.T("Live"), Success); SetState(Localization.T("PreviewActive", device.Name));
             }
             catch (Exception ex)
             {
-                log.Error("Avvio webcam fallito (dispositivo occupato, scollegato o formato non supportato)", ex); MessageBox.Show(DialogOwner, "Impossibile avviare la webcam.\r\n\r\n" + ex.Message, "Visupra7", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                SetConnectionState("ERRORE", Danger); SetState("Errore avvio webcam");
+                log.Error("Avvio webcam fallito (dispositivo occupato, scollegato o formato non supportato)", ex); MessageBox.Show(DialogOwner, Localization.T("CameraStartBody", ex.Message), "Visupra7", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SetConnectionState(Localization.T("Error"), Danger); SetState(Localization.T("CameraStartError"));
             }
             finally { SetBusy(false); UpdateButtons(); }
         }
 
         private async Task StopCamera()
         {
-            if (fullscreenWindow != null) fullscreenWindow.Close(); SetBusy(true); if (recorder.IsRecording) await StopRecording(); SetState("Arresto webcam..."); await Task.Run(delegate { capture.Stop(); });
-            previewPlaceholder.Visible = true; previewPlaceholder.BringToFront(); formatInfo.Text = "NESSUN SEGNALE"; SetConnectionState("OFFLINE", TextMuted); SetState("Webcam ferma"); SetBusy(false); UpdateButtons();
+            if (fullscreenWindow != null) fullscreenWindow.Close(); SetBusy(true); if (recorder.IsRecording) await StopRecording(); SetState(Localization.T("StoppingCamera")); await Task.Run(delegate { capture.Stop(); });
+            previewPlaceholder.Visible = true; previewPlaceholder.BringToFront(); formatInfo.Text = Localization.T("NoSignal"); SetConnectionState(Localization.T("Offline"), TextMuted); SetState(Localization.T("CameraStopped")); SetBusy(false); UpdateButtons();
         }
 
         private async Task TakeScreenshot()
         {
-            FrameData frame = capture.GetLatestFrame(); if (frame == null) { MessageBox.Show(DialogOwner, "Non è ancora disponibile un frame.", "Visupra7", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            FrameData frame = capture.GetLatestFrame(); if (frame == null) { MessageBox.Show(DialogOwner, Localization.T("WaitFirstFrame"), "Visupra7", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             screenshot.Enabled = false;
-            try { string path = await Task.Run(delegate { return SaveJpeg(frame); }); log.Info("Screenshot salvato: " + path); SetState("Screenshot salvato · " + Path.GetFileName(path)); }
-            catch (Exception ex) { log.Error("Screenshot fallito", ex); MessageBox.Show(DialogOwner, ex.Message, "Errore screenshot", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            try { string path = await Task.Run(delegate { return SaveJpeg(frame); }); log.Info("Screenshot salvato: " + path); SetState(Localization.T("ScreenshotSaved", Path.GetFileName(path))); }
+            catch (Exception ex) { log.Error("Screenshot fallito", ex); MessageBox.Show(DialogOwner, ex.Message, Localization.T("ScreenshotError"), MessageBoxButtons.OK, MessageBoxIcon.Error); }
             finally { screenshot.Enabled = true; }
         }
 
@@ -317,26 +345,26 @@ namespace Visupra7
 
         private void StartRecording()
         {
-            try { FrameData frame = capture.GetLatestFrame(); if (frame == null) throw new InvalidOperationException("Attendere il primo frame della webcam."); recorder.Start(frame.Width, frame.Height, capture.Fps, frame.BottomUp); SetState("Registrazione in corso · " + Path.GetFileName(recorder.OutputPath)); }
-            catch (Exception ex) { log.Error("Avvio registrazione fallito", ex); MessageBox.Show(DialogOwner, ex.Message, "Registrazione non avviata", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            try { FrameData frame = capture.GetLatestFrame(); if (frame == null) throw new InvalidOperationException(Localization.T("WaitFirstFrame")); recorder.Start(frame.Width, frame.Height, capture.Fps, frame.BottomUp); SetState(Localization.T("RecordingStarted", Path.GetFileName(recorder.OutputPath))); }
+            catch (Exception ex) { log.Error("Avvio registrazione fallito", ex); MessageBox.Show(DialogOwner, ex.Message, Localization.T("RecordingNotStarted"), MessageBoxButtons.OK, MessageBoxIcon.Error); }
             UpdateButtons();
         }
 
         private async Task StopRecording()
         {
-            if (!recorder.IsRecording) return; stopRecord.Enabled = false; SetState("Finalizzazione MP4..."); RecordingResult result = await recorder.StopAsync();
-            if (result.Success) SetState("Registrazione salvata · " + Path.GetFileName(result.Path)); else { SetState("Registrazione fallita"); MessageBox.Show(DialogOwner, result.Error, "Errore registrazione", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            if (!recorder.IsRecording) return; stopRecord.Enabled = false; SetState(Localization.T("FinalizingMp4")); RecordingResult result = await recorder.StopAsync();
+            if (result.Success) SetState(Localization.T("RecordingSaved", Path.GetFileName(result.Path))); else { SetState(Localization.T("RecordingFailed")); MessageBox.Show(DialogOwner, result.Error, Localization.T("RecordingError"), MessageBoxButtons.OK, MessageBoxIcon.Warning); }
             UpdateButtons();
         }
 
         private void TimerTick(object sender, EventArgs e)
         {
             rec.Visible = recorder.IsRecording; elapsed.Text = recorder.IsRecording ? recorder.Elapsed.ToString(@"hh\:mm\:ss") : "00:00:00"; if (fullscreenWindow != null) fullscreenWindow.SetRecording(recorder.IsRecording, recorder.Elapsed);
-            if (capture.IsRunning && capture.PollDeviceLost()) { log.Warn("Perdita dispositivo o completamento inatteso del graph"); SetState("Webcam scollegata o flusso interrotto"); SetConnectionState("SEGNALE PERSO", Danger); Task ignoredStop = StopCamera(); }
+            if (capture.IsRunning && capture.PollDeviceLost()) { log.Warn("Perdita dispositivo o completamento inatteso del graph"); SetState(Localization.T("DeviceLost")); SetConnectionState(Localization.T("SignalLost"), Danger); Task ignoredStop = StopCamera(); }
         }
 
         private void SetConnectionState(string value, Color color) { connectionState.Text = value; connectionState.ForeColor = color; }
-        private void RecorderFailed(string message) { if (!IsDisposed) BeginInvoke((Action)delegate { SetState("Encoder in errore · anteprima ancora attiva"); UpdateButtons(); }); }
+        private void RecorderFailed(string message) { if (!IsDisposed) BeginInvoke((Action)delegate { SetState(Localization.T("EncoderError")); UpdateButtons(); }); }
         private void AppendLog(string line) { if (IsDisposed || closing) return; if (InvokeRequired) { try { BeginInvoke((Action<string>)AppendLog, line); } catch { } return; } logBox.AppendText(line + Environment.NewLine); if (logBox.TextLength > 250000) logBox.Text = logBox.Text.Substring(100000); }
         private void SetState(string value) { state.Text = value; }
         private void SetBusy(bool busy) { detect.Enabled = !busy; start.Enabled = !busy; stop.Enabled = !busy; devices.Enabled = !busy; formats.Enabled = !busy; }

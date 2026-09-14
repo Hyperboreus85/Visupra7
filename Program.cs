@@ -14,6 +14,7 @@ namespace Visupra7
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             var settings = new AppSettings();
+            Localization.SetLanguage(settings.Language);
             using (var log = new Logger(settings.LogFolder))
             {
                 Application.ThreadException += delegate(object s, ThreadExceptionEventArgs e) { log.Error("Eccezione UI non gestita", e.Exception); };

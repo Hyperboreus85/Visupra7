@@ -12,6 +12,7 @@ namespace Visupra7
         public string RecordingFolder { get; private set; }
         public string LogFolder { get; private set; }
         public string FfmpegPath { get; private set; }
+        public string Language { get; private set; }
         public long JpegQuality { get; private set; }
         public int H264Crf { get; private set; }
         public string H264Preset { get; private set; }
@@ -26,6 +27,7 @@ namespace Visupra7
             RecordingFolder = Resolve(Get("RecordingFolder", "Recordings"));
             LogFolder = Resolve(Get("LogFolder", "Logs"));
             FfmpegPath = Resolve(Get("FfmpegRelativePath", @"Tools\ffmpeg.exe"));
+            Language = Get("Language", "en");
             JpegQuality = Clamp(GetInt("JpegQuality", 85), 1, 100);
             H264Crf = Clamp(GetInt("H264Crf", 23), 0, 51);
             H264Preset = Get("H264Preset", "veryfast");

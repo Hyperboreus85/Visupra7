@@ -75,12 +75,12 @@ namespace Visupra7
             {
                 closeFullscreen = onCloseFullscreen; FormBorderStyle = FormBorderStyle.None; StartPosition = FormStartPosition.Manual; ShowInTaskbar = false;
                 TopMost = true; KeyPreview = true; BackColor = Overlay; ClientSize = new Size(730, 88); AutoScaleMode = AutoScaleMode.Dpi;
-                record.Text = "●  REC"; record.BaseColor = Danger; record.HoverColor = Color.FromArgb(250, 88, 105); record.Location = new Point(16, 18); record.Size = new Size(112, 50);
-                stop.Text = "■  STOP"; stop.BaseColor = Surface; stop.HoverColor = Color.FromArgb(55, 66, 81); stop.Location = new Point(138, 18); stop.Size = new Size(112, 50);
-                snapshot.Text = "ACQUISISCI IMMAGINE"; snapshot.BaseColor = Surface; snapshot.HoverColor = Color.FromArgb(55, 66, 81); snapshot.Location = new Point(260, 18); snapshot.Size = new Size(190, 50);
-                recordingState.Text = "PRONTO"; recordingState.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold); recordingState.ForeColor = TextMuted;
+                record.Text = Localization.T("OverlayRecord"); record.BaseColor = Danger; record.HoverColor = Color.FromArgb(250, 88, 105); record.Location = new Point(16, 18); record.Size = new Size(112, 50);
+                stop.Text = Localization.T("OverlayStop"); stop.BaseColor = Surface; stop.HoverColor = Color.FromArgb(55, 66, 81); stop.Location = new Point(138, 18); stop.Size = new Size(112, 50);
+                snapshot.Text = Localization.T("OverlayCapture"); snapshot.BaseColor = Surface; snapshot.HoverColor = Color.FromArgb(55, 66, 81); snapshot.Location = new Point(260, 18); snapshot.Size = new Size(190, 50);
+                recordingState.Text = Localization.T("OverlayReady"); recordingState.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold); recordingState.ForeColor = TextMuted;
                 recordingState.TextAlign = ContentAlignment.MiddleCenter; recordingState.Location = new Point(460, 18); recordingState.Size = new Size(140, 50);
-                exit.Text = "ESCI  ESC"; exit.BaseColor = Color.FromArgb(31, 38, 48); exit.HoverColor = Color.FromArgb(50, 59, 72); exit.Location = new Point(610, 18); exit.Size = new Size(104, 50);
+                exit.Text = Localization.T("OverlayExit"); exit.BaseColor = Color.FromArgb(31, 38, 48); exit.HoverColor = Color.FromArgb(50, 59, 72); exit.Location = new Point(610, 18); exit.Size = new Size(104, 50);
                 Controls.Add(record); Controls.Add(stop); Controls.Add(snapshot); Controls.Add(recordingState); Controls.Add(exit);
                 record.Click += delegate { record.Enabled = false; onStartRecording(); }; stop.Click += async delegate { stop.Enabled = false; await onStopRecording(); }; snapshot.Click += async delegate { snapshot.Enabled = false; try { await onTakeSnapshot(); } finally { snapshot.Enabled = true; } }; exit.Click += delegate { closeFullscreen(); };
                 KeyDown += delegate(object sender, KeyEventArgs e) { if (e.KeyCode == Keys.Escape || e.KeyCode == Keys.F11) { e.Handled = true; closeFullscreen(); } };
@@ -90,7 +90,7 @@ namespace Visupra7
 
             public void SetRecording(bool active, TimeSpan elapsed)
             {
-                record.Enabled = !active; stop.Enabled = active; recordingState.Text = active ? "●  REC  " + elapsed.ToString(@"hh\:mm\:ss") : "PRONTO"; recordingState.ForeColor = active ? Danger : TextMuted;
+                record.Enabled = !active; stop.Enabled = active; recordingState.Text = active ? "●  REC  " + elapsed.ToString(@"hh\:mm\:ss") : Localization.T("OverlayReady"); recordingState.ForeColor = active ? Danger : TextMuted;
             }
         }
 

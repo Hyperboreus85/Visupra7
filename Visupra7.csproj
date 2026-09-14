@@ -28,7 +28,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" /><Compile Include="AppSettings.cs" />
-    <Compile Include="Logger.cs" /><Compile Include="DirectShowInterop.cs" />
+    <Compile Include="Localization.cs" /><Compile Include="Logger.cs" /><Compile Include="DirectShowInterop.cs" />
     <Compile Include="MediaEventInterop.cs" /><Compile Include="WebcamCapture.cs" /><Compile Include="FfmpegRecorder.cs" />
     <Compile Include="FullscreenPreviewForm.cs" /><Compile Include="MainForm.cs" />
   </ItemGroup>

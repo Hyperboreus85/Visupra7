@@ -4,6 +4,8 @@ Applicazione WinForms x86 per Windows 7 SP1 e .NET Framework 4.8. Usa DirectShow
 
 L'anteprima supporta la modalità a schermo intero tramite pulsante o doppio clic. In fullscreen rimane disponibile un overlay sempre visibile con REC, STOP, acquisizione immagine, durata registrazione e uscita tramite Esc/F11.
 
+L'interfaccia è disponibile in inglese e italiano. Il primo avvio usa l'inglese (Language=en in App.config); la lingua può essere cambiata immediatamente dal selettore nell'header.
+
 ## Build e deploy
 
 Eseguire `deploy-win7.bat`. La build non richiede Visual Studio o NuGet: usa il compilatore .NET Framework installato. Lo script prepara `dist` e la sincronizza in `\\win7\Dev\Visupra7`.

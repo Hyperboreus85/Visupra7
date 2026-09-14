@@ -50,7 +50,7 @@ namespace Visupra7
             {
                 devEnum = (ICreateDevEnum)new SystemDeviceEnum(); Guid category = Guids.VideoInputDeviceCategory;
                 int hr = devEnum.CreateClassEnumerator(ref category, out enumMoniker, 0);
-                if (hr != 0 || enumMoniker == null) { log.Info("Nessuna webcam rilevata"); return devices; }
+                if (hr != 0 || enumMoniker == null) { log.Info(Localization.T("NoCameraDetected")); return devices; }
                 var values = new IMoniker[1]; IntPtr fetched = Marshal.AllocCoTaskMem(4);
                 try
                 {
