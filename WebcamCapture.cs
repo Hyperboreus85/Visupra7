@@ -10,10 +10,9 @@ namespace Visupra7
     {
         public string Name { get; private set; }
         public string MonikerName { get; private set; }
-        internal IMoniker Moniker { get; private set; }
-        public WebcamDevice(string name, string monikerName, IMoniker moniker) { Name = name; MonikerName = monikerName; Moniker = moniker; }
+        public WebcamDevice(string name, string monikerName) { Name = name; MonikerName = monikerName; }
         public override string ToString() { return Name; }
-        public void Dispose() { DsUtil.Release(Moniker); Moniker = null; }
+        public void Dispose() { }
     }
 
     internal sealed class VideoFormat
@@ -56,17 +55,17 @@ namespace Visupra7
                 {
                     while (enumMoniker.Next(1, values, fetched) == 0)
                     {
-                        IMoniker moniker = values[0]; string name = "Webcam"; string display = ""; object bagObject = null;
+                        IMoniker moniker = values[0]; values[0] = null; string name = "Webcam"; string display = ""; object bagObject = null;
                         try
                         {
                             Guid bagId = typeof(IPropertyBag).GUID; moniker.BindToStorage(null, null, ref bagId, out bagObject);
                             object value; if (((IPropertyBag)bagObject).Read("FriendlyName", out value, IntPtr.Zero) == 0) name = Convert.ToString(value);
                             moniker.GetDisplayName(null, null, out display);
-                            devices.Add(new WebcamDevice(name, display, moniker)); values[0] = null;
+                            devices.Add(new WebcamDevice(name, display));
                             log.Info("Webcam rilevata: " + name + "; moniker: " + display);
                         }
-                        catch (Exception ex) { log.Error("Errore nella lettura di una webcam", ex); DsUtil.Release(moniker); }
-                        finally { DsUtil.Release(bagObject); }
+                        catch (Exception ex) { log.Error("Errore nella lettura di una webcam", ex); }
+                        finally { DsUtil.Release(bagObject); DsUtil.Release(moniker); }
                     }
                 }
                 finally { Marshal.FreeCoTaskMem(fetched); }
@@ -197,7 +196,36 @@ namespace Visupra7
             try { lock (frameSync) { if (latest == null || latest.Buffer.Length != bufferLen) latest = new FrameData(new byte[bufferLen], width, height, stride, bottomUp); Marshal.Copy(buffer, latest.Buffer, 0, bufferLen); var handler = FrameArrived; if (handler != null) handler(latest); } } catch { }
             return 0;
         }
-        private static IBaseFilter Bind(WebcamDevice device) { object value; Guid iid = typeof(IBaseFilter).GUID; device.Moniker.BindToObject(null, null, ref iid, out value); return (IBaseFilter)value; }
+        private static IBaseFilter Bind(WebcamDevice device)
+        {
+            ICreateDevEnum devEnum = null; IEnumMoniker enumMoniker = null; IntPtr fetched = IntPtr.Zero;
+            try
+            {
+                devEnum = (ICreateDevEnum)new SystemDeviceEnum(); Guid category = Guids.VideoInputDeviceCategory;
+                int hr = devEnum.CreateClassEnumerator(ref category, out enumMoniker, 0);
+                if (hr != 0 || enumMoniker == null) throw new InvalidOperationException(Localization.T("DeviceUnavailable"));
+                var values = new IMoniker[1]; fetched = Marshal.AllocCoTaskMem(4);
+                while (enumMoniker.Next(1, values, fetched) == 0)
+                {
+                    IMoniker moniker = values[0]; values[0] = null;
+                    try
+                    {
+                        string display; moniker.GetDisplayName(null, null, out display);
+                        if (!string.Equals(display, device.MonikerName, StringComparison.OrdinalIgnoreCase)) continue;
+                        object value; Guid iid = typeof(IBaseFilter).GUID;
+                        moniker.BindToObject(null, null, ref iid, out value);
+                        return (IBaseFilter)value;
+                    }
+                    finally { DsUtil.Release(moniker); }
+                }
+                throw new InvalidOperationException(Localization.T("DeviceUnavailable"));
+            }
+            finally
+            {
+                if (fetched != IntPtr.Zero) Marshal.FreeCoTaskMem(fetched);
+                DsUtil.Release(enumMoniker); DsUtil.Release(devEnum);
+            }
+        }
         public void Dispose() { Stop(); }
     }
 }

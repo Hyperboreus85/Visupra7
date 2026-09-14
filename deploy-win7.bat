@@ -17,26 +17,26 @@ if exist "Tools\ffmpeg.exe" (
 
 if not exist "dist\Visupra7.exe" goto :verifyerror
 if not exist "dist\Visupra7.exe.config" goto :verifyerror
-if not exist "\\win7\Dev\Visupra7" mkdir "\\win7\Dev\Visupra7"
-robocopy "dist" "\\win7\Dev\Visupra7" /E /R:2 /W:2 /NFL /NDL /NJH /NJS
+if not exist "\\192.168.10.123\Visupra7" mkdir "\\192.168.10.123\Visupra7"
+robocopy "dist" "\\192.168.10.123\Visupra7" /E /R:2 /W:2 /NFL /NDL /NJH /NJS
 if errorlevel 8 (
   echo ERRORE: deploy Robocopy fallito con codice %ERRORLEVEL%.
   exit /b 1
 )
-if not exist "\\win7\Dev\Visupra7\Visupra7.exe" (
+if not exist "\\192.168.10.123\Visupra7\Visupra7.exe" (
   echo ERRORE: Visupra7.exe non presente a destinazione dopo Robocopy.
   exit /b 1
 )
-if not exist "\\win7\Dev\Visupra7\Visupra7.exe.config" (
+if not exist "\\192.168.10.123\Visupra7\Visupra7.exe.config" (
   echo ERRORE: configurazione non presente a destinazione dopo Robocopy.
   exit /b 1
 )
-fc /b "dist\Visupra7.exe" "\\win7\Dev\Visupra7\Visupra7.exe" >nul
+fc /b "dist\Visupra7.exe" "\\192.168.10.123\Visupra7\Visupra7.exe" >nul
 if errorlevel 1 (
   echo ERRORE: verifica binaria dell'eseguibile distribuito fallita.
   exit /b 1
 )
-echo Deploy completato in \\win7\Dev\Visupra7
+echo Deploy completato in \\192.168.10.123\Visupra7
 exit /b 0
 
 :copyerror

@@ -8,7 +8,7 @@ L'interfaccia è disponibile in inglese e italiano. Il primo avvio usa l'inglese
 
 ## Build e deploy
 
-Eseguire `deploy-win7.bat`. La build non richiede Visual Studio o NuGet: usa il compilatore .NET Framework installato. Lo script prepara `dist` e la sincronizza in `\\win7\Dev\Visupra7`.
+Eseguire `deploy-win7.bat`. La build non richiede Visual Studio o NuGet: usa il compilatore .NET Framework installato. Lo script prepara `dist` e la sincronizza in `\\192.168.10.123\Visupra7`.
 
 La registrazione richiede una build **x86 compatibile con Windows 7** di FFmpeg, collocata in `Tools\ffmpeg.exe`. L'app non usa FFmpeg dal PATH. In assenza di FFmpeg, anteprima e screenshot restano disponibili e il tentativo di registrazione mostra un errore leggibile.
 

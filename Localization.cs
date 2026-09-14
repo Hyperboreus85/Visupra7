@@ -29,7 +29,8 @@ namespace Visupra7
             {"PreviewRestored", "Preview restored"}, {"FullscreenError", "Full screen error"}, {"EncoderError", "Encoder error · preview is still active"},
             {"DeviceLost", "Webcam disconnected or stream interrupted"}, {"OverlayRecord", "●  REC"}, {"OverlayStop", "■  STOP"},
             {"OverlayCapture", "CAPTURE IMAGE"}, {"OverlayExit", "EXIT  ESC"}, {"OverlayReady", "READY"},
-            {"DetectTip", "Refresh the DirectShow device list"}, {"ScreenshotTip", "Save the current frame as a JPEG image"}, {"RecordTip", "Record H.264 MP4 through FFmpeg"}
+            {"DetectTip", "Refresh the DirectShow device list"}, {"ScreenshotTip", "Save the current frame as a JPEG image"}, {"RecordTip", "Record H.264 MP4 through FFmpeg"},
+            {"DeviceUnavailable", "The selected webcam is no longer available."}
         };
 
         private static readonly Dictionary<string, string> Italian = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -54,7 +55,8 @@ namespace Visupra7
             {"PreviewRestored", "Anteprima ripristinata"}, {"FullscreenError", "Errore schermo intero"}, {"EncoderError", "Encoder in errore · anteprima ancora attiva"},
             {"DeviceLost", "Webcam scollegata o flusso interrotto"}, {"OverlayRecord", "●  REC"}, {"OverlayStop", "■  STOP"},
             {"OverlayCapture", "ACQUISISCI IMMAGINE"}, {"OverlayExit", "ESCI  ESC"}, {"OverlayReady", "PRONTO"},
-            {"DetectTip", "Aggiorna l'elenco dei dispositivi DirectShow"}, {"ScreenshotTip", "Salva il frame corrente in formato JPEG"}, {"RecordTip", "Registra MP4 H.264 tramite FFmpeg"}
+            {"DetectTip", "Aggiorna l'elenco dei dispositivi DirectShow"}, {"ScreenshotTip", "Salva il frame corrente in formato JPEG"}, {"RecordTip", "Registra MP4 H.264 tramite FFmpeg"},
+            {"DeviceUnavailable", "La webcam selezionata non è più disponibile."}
         };
 
         private static string currentCode = "en";
