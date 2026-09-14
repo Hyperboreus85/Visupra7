@@ -29,7 +29,9 @@ namespace Visupra7
             {"PreviewRestored", "Preview restored"}, {"FullscreenError", "Full screen error"}, {"EncoderError", "Encoder error · preview is still active"},
             {"DeviceLost", "Webcam disconnected or stream interrupted"}, {"OverlayRecord", "●  REC"}, {"OverlayStop", "■  STOP"},
             {"OverlayCapture", "CAPTURE IMAGE"}, {"OverlayExit", "EXIT  ESC"}, {"OverlayReady", "READY"},
-            {"DetectTip", "Refresh the DirectShow device list"}, {"ScreenshotTip", "Save the current frame as a JPEG image"}, {"RecordTip", "Record H.264 MP4 through FFmpeg"},
+            {"DetectTip", "Refresh the DirectShow device list"}, {"StartTip", "Start the webcam preview"},
+            {"RecordTip", "Start recording an H.264 MP4 video"}, {"StopTip", "Stop and save the recording, or stop the preview"},
+            {"ScreenshotTip", "Capture the current frame as a JPEG image"}, {"FullscreenTip", "Open the webcam preview in full screen"},
             {"DeviceUnavailable", "The selected webcam is no longer available."}
         };
 
@@ -55,7 +57,9 @@ namespace Visupra7
             {"PreviewRestored", "Anteprima ripristinata"}, {"FullscreenError", "Errore schermo intero"}, {"EncoderError", "Encoder in errore · anteprima ancora attiva"},
             {"DeviceLost", "Webcam scollegata o flusso interrotto"}, {"OverlayRecord", "●  REC"}, {"OverlayStop", "■  STOP"},
             {"OverlayCapture", "ACQUISISCI IMMAGINE"}, {"OverlayExit", "ESCI  ESC"}, {"OverlayReady", "PRONTO"},
-            {"DetectTip", "Aggiorna l'elenco dei dispositivi DirectShow"}, {"ScreenshotTip", "Salva il frame corrente in formato JPEG"}, {"RecordTip", "Registra MP4 H.264 tramite FFmpeg"},
+            {"DetectTip", "Aggiorna l'elenco dei dispositivi DirectShow"}, {"StartTip", "Avvia l'anteprima della webcam"},
+            {"RecordTip", "Avvia la registrazione di un video MP4 H.264"}, {"StopTip", "Ferma e salva la registrazione, oppure arresta l'anteprima"},
+            {"ScreenshotTip", "Acquisisci il frame corrente come immagine JPEG"}, {"FullscreenTip", "Apri l'anteprima della webcam a schermo intero"},
             {"DeviceUnavailable", "La webcam selezionata non è più disponibile."}
         };
 
