@@ -38,6 +38,7 @@ namespace Visupra7
         private readonly ModernButton toggleLog = new ModernButton();
         private readonly ModernButton fullscreen = new ModernButton();
         private readonly ComboBox language = new ComboBox();
+        private readonly Panel previewHost = new Panel();
         private readonly Panel preview = new Panel();
         private readonly Label previewPlaceholder = new Label();
         private readonly TextBox logBox = new TextBox();
@@ -51,7 +52,7 @@ namespace Visupra7
         private readonly ToolTip tips = new ToolTip();
         private List<WebcamDevice> deviceList = new List<WebcamDevice>();
         private bool closing;
-        private bool logExpanded = false;
+        private bool logExpanded = true;
         private FullscreenPreviewForm fullscreenWindow;
 
         public MainForm(AppSettings appSettings, Logger logger)
@@ -64,8 +65,8 @@ namespace Visupra7
             recorder.Failed += RecorderFailed;
 
             Text = "Visupra7";
-            MinimumSize = new Size(800, 600);
-            Size = new Size(800, 600);
+            MinimumSize = new Size(560, 600);
+            ClientSize = new Size(666, 728);
             StartPosition = FormStartPosition.CenterScreen;
             AutoScaleMode = AutoScaleMode.Dpi;
             BackColor = WindowBack;
@@ -97,47 +98,50 @@ namespace Visupra7
 
         private Control BuildHeader()
         {
-            var header = new Panel { Dock = DockStyle.Top, Height = 72, BackColor = Color.FromArgb(17, 22, 29), Padding = new Padding(14, 0, 12, 0) };
-            var mark = new LogoMark { Location = new Point(14, 15), Size = new Size(40, 40) };
-            var title = MakeLabel("VISUPRA7", 16F, FontStyle.Bold, TextMain); title.Location = new Point(64, 12); title.AutoSize = true;
-            var subtitle = MakeLabel("", 7F, FontStyle.Bold, TextMuted); subtitle.Location = new Point(66, 41); subtitle.AutoSize = true; Localization.Bind(subtitle, "AppSubtitle");
+            var header = new Panel { Dock = DockStyle.Top, Height = 96, BackColor = Color.FromArgb(17, 22, 29) };
+            var top = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent };
+            var mark = new LogoMark { Location = new Point(12, 8), Size = new Size(34, 34) };
+            var title = MakeLabel("VISUPRA7", 14F, FontStyle.Bold, TextMain); title.Location = new Point(55, 5); title.AutoSize = true;
+            var subtitle = MakeLabel("", 6.5F, FontStyle.Bold, TextMuted); subtitle.Location = new Point(57, 29); subtitle.AutoSize = true; Localization.Bind(subtitle, "AppSubtitle");
 
-            ConfigureToolbarButton(start, ButtonIcon.Play, Accent, AccentHover, "Start preview");
-            ConfigureToolbarButton(record, ButtonIcon.Record, Danger, Color.FromArgb(250, 88, 105), "Start recording");
-            ConfigureToolbarButton(stop, ButtonIcon.Stop, SurfaceLight, Color.FromArgb(49, 61, 76), "Stop");
-            ConfigureToolbarButton(screenshot, ButtonIcon.Capture, SurfaceLight, Color.FromArgb(49, 61, 76), "Capture image");
-            var toolbar = new FlowLayoutPanel { Dock = DockStyle.Right, Width = 192, Padding = new Padding(4, 14, 0, 0), BackColor = Color.Transparent, WrapContents = false };
-            toolbar.Controls.Add(start); toolbar.Controls.Add(record); toolbar.Controls.Add(stop); toolbar.Controls.Add(screenshot);
+            elapsed.Text = "00:00:00"; elapsed.Font = new Font("Consolas", 11F, FontStyle.Bold); elapsed.ForeColor = TextMain;
+            elapsed.TextAlign = ContentAlignment.MiddleCenter; elapsed.Dock = DockStyle.Right; elapsed.Width = 84;
+            rec.Text = "REC"; rec.Font = new Font("Segoe UI", 7F, FontStyle.Bold); rec.ForeColor = Color.White; rec.BackColor = Danger;
+            rec.TextAlign = ContentAlignment.MiddleCenter; rec.Dock = DockStyle.Right; rec.Width = 42; rec.Visible = false;
+            connectionState.Text = "OFFLINE"; connectionState.Font = new Font("Segoe UI", 6.5F, FontStyle.Bold); connectionState.ForeColor = TextMuted;
+            connectionState.TextAlign = ContentAlignment.MiddleCenter; connectionState.Dock = DockStyle.Right; connectionState.Width = 62;
+            var languagePanel = new Panel { Dock = DockStyle.Right, Width = 96, BackColor = Color.Transparent };
+            ConfigureCombo(language); language.Location = new Point(3, 11); language.Size = new Size(89, 25); language.Items.Add("English"); language.Items.Add("Italiano"); language.SelectedIndex = Localization.CurrentCode == "it" ? 1 : 0;
+            languagePanel.Controls.Add(language);
+            top.Controls.Add(rec); top.Controls.Add(elapsed); top.Controls.Add(connectionState); top.Controls.Add(languagePanel); top.Controls.Add(mark); top.Controls.Add(title); top.Controls.Add(subtitle);
 
-            elapsed.Text = "00:00:00"; elapsed.Font = new Font("Consolas", 12F, FontStyle.Bold); elapsed.ForeColor = TextMain;
-            elapsed.TextAlign = ContentAlignment.MiddleCenter; elapsed.Dock = DockStyle.Right; elapsed.Width = 88;
-            rec.Text = "REC"; rec.Font = new Font("Segoe UI", 8F, FontStyle.Bold); rec.ForeColor = Color.White; rec.BackColor = Danger;
-            rec.TextAlign = ContentAlignment.MiddleCenter; rec.Dock = DockStyle.Right; rec.Width = 48; rec.Visible = false;
-            connectionState.Text = "OFFLINE"; connectionState.Font = new Font("Segoe UI", 7F, FontStyle.Bold); connectionState.ForeColor = TextMuted;
-            connectionState.TextAlign = ContentAlignment.MiddleCenter; connectionState.Dock = DockStyle.Right; connectionState.Width = 66;
-            var languagePanel = new Panel { Dock = DockStyle.Right, Width = 106, BackColor = Color.Transparent };
-            var languageLabel = MakeLabel("", 6.5F, FontStyle.Bold, TextMuted); languageLabel.Location = new Point(5, 8); languageLabel.AutoSize = true; Localization.Bind(languageLabel, "Language");
-            ConfigureCombo(language); language.Location = new Point(4, 27); language.Size = new Size(98, 25); language.Items.Add("English"); language.Items.Add("Italiano"); language.SelectedIndex = Localization.CurrentCode == "it" ? 1 : 0;
-            languagePanel.Controls.Add(languageLabel); languagePanel.Controls.Add(language);
-
+            var commands = new Panel { Dock = DockStyle.Bottom, Height = 48, BackColor = Color.FromArgb(14, 19, 26), Padding = new Padding(12, 4, 12, 4) };
+            ConfigureCombo(devices); devices.Location = new Point(12, 10); devices.Size = new Size(190, 27);
+            ConfigureToolbarButton(detect, ButtonIcon.Search, SurfaceLight, Accent, "Detect webcams"); detect.Location = new Point(208, 5);
+            ConfigureToolbarButton(start, ButtonIcon.Play, Accent, AccentHover, "Start preview"); start.Location = new Point(258, 5);
+            ConfigureToolbarButton(record, ButtonIcon.Record, Danger, Color.FromArgb(250, 88, 105), "Start recording"); record.Location = new Point(304, 5);
+            ConfigureToolbarButton(stop, ButtonIcon.Stop, SurfaceLight, Color.FromArgb(49, 61, 76), "Stop"); stop.Location = new Point(350, 5);
+            ConfigureToolbarButton(screenshot, ButtonIcon.Capture, SurfaceLight, Color.FromArgb(49, 61, 76), "Capture image"); screenshot.Location = new Point(396, 5);
+            ConfigureToolbarButton(fullscreen, ButtonIcon.Fullscreen, SurfaceLight, Accent, "Full screen"); fullscreen.Location = new Point(442, 5);
+            commands.Controls.Add(devices); commands.Controls.Add(detect); commands.Controls.Add(start); commands.Controls.Add(record); commands.Controls.Add(stop); commands.Controls.Add(screenshot); commands.Controls.Add(fullscreen);
+            commands.Paint += delegate(object sender, PaintEventArgs e) { using (var pen = new Pen(Border)) e.Graphics.DrawLine(pen, 0, 0, commands.Width, 0); };
             header.Paint += delegate(object sender, PaintEventArgs e) { using (var pen = new Pen(Border)) e.Graphics.DrawLine(pen, 0, header.Height - 1, header.Width, header.Height - 1); };
-            header.Controls.Add(toolbar); header.Controls.Add(rec); header.Controls.Add(elapsed); header.Controls.Add(connectionState); header.Controls.Add(languagePanel); header.Controls.Add(mark); header.Controls.Add(title); header.Controls.Add(subtitle);
+            header.Controls.Add(top); header.Controls.Add(commands);
             return header;
         }
 
         private static void ConfigureToolbarButton(ModernButton button, ButtonIcon icon, Color baseColor, Color hoverColor, string accessibleName)
         {
-            button.Text = ""; button.Icon = icon; button.Size = new Size(40, 40); button.Margin = new Padding(3, 0, 3, 0);
+            button.Text = ""; button.Icon = icon; button.Size = new Size(40, 38); button.Margin = new Padding(3, 0, 3, 0);
             button.BaseColor = baseColor; button.HoverColor = hoverColor; button.AccessibleName = accessibleName;
         }
         private Control BuildWorkspace()
         {
-            var work = new Panel { Dock = DockStyle.Fill, BackColor = WindowBack, Padding = new Padding(12, 10, 12, 10) };
-            logCard.Dock = DockStyle.Bottom; logCard.Height = 30; logCard.Padding = new Padding(1); logCard.BackColor = Surface;
+            var work = new Panel { Dock = DockStyle.Fill, BackColor = WindowBack, Padding = new Padding(12) };
+            logCard.Dock = DockStyle.Bottom; logCard.Height = 90; logCard.Padding = new Padding(1); logCard.BackColor = Surface;
             logCard.Controls.Add(BuildLogBody()); logCard.Controls.Add(BuildLogHeader());
-            var logGap = new Panel { Dock = DockStyle.Bottom, Height = 8, BackColor = WindowBack };
-            var sourceGap = new Panel { Dock = DockStyle.Top, Height = 8, BackColor = WindowBack };
-            work.Controls.Add(BuildPreviewCard()); work.Controls.Add(logGap); work.Controls.Add(logCard); work.Controls.Add(sourceGap); work.Controls.Add(BuildSourceCard());
+            var gap = new Panel { Dock = DockStyle.Bottom, Height = 8, BackColor = WindowBack };
+            work.Controls.Add(BuildPreviewCard()); work.Controls.Add(gap); work.Controls.Add(logCard);
             return work;
         }
         private Control BuildSourceCard()
@@ -171,26 +175,23 @@ namespace Visupra7
         private Control BuildPreviewCard()
         {
             var card = new CardPanel { Dock = DockStyle.Fill, BackColor = Surface, Padding = new Padding(1) };
-            var head = new Panel { Dock = DockStyle.Top, Height = 34, BackColor = Surface, Padding = new Padding(12, 0, 12, 0) };
-            var title = MakeLabel("PREVIEW", 8F, FontStyle.Bold, TextMain); title.Dock = DockStyle.Left; title.Width = 100; title.TextAlign = ContentAlignment.MiddleLeft;
-            formatInfo.Text = "NO SIGNAL"; formatInfo.Font = new Font("Segoe UI", 7F, FontStyle.Bold); formatInfo.ForeColor = TextMuted; formatInfo.Dock = DockStyle.Right; formatInfo.Width = 190; formatInfo.TextAlign = ContentAlignment.MiddleRight;
-            Localization.Bind(title, "Preview"); head.Controls.Add(formatInfo); head.Controls.Add(title);
-
-            var previewFrame = new Panel { Dock = DockStyle.Fill, BackColor = Surface, Padding = new Padding(8, 0, 8, 8) };
-            preview.Dock = DockStyle.Fill; preview.BackColor = Color.FromArgb(4, 6, 9);
+            previewHost.Dock = DockStyle.Fill; previewHost.BackColor = Color.FromArgb(4, 6, 9);
+            preview.BackColor = Color.Black; preview.Size = new Size(640, 480);
             previewPlaceholder.Text = "NO VIDEO SOURCE\r\n\r\nSelect a webcam and start the preview";
             previewPlaceholder.ForeColor = TextMuted; previewPlaceholder.BackColor = Color.Transparent; previewPlaceholder.TextAlign = ContentAlignment.MiddleCenter;
             previewPlaceholder.Font = new Font("Segoe UI", 9F); previewPlaceholder.AutoSize = false; previewPlaceholder.Dock = DockStyle.Fill;
-            ConfigureToolbarButton(fullscreen, ButtonIcon.Fullscreen, Color.FromArgb(25, 33, 43), Accent, "Full screen"); fullscreen.Size = new Size(42, 42); fullscreen.Anchor = AnchorStyles.Right | AnchorStyles.Bottom;
-            preview.Controls.Add(previewPlaceholder); preview.Controls.Add(fullscreen); fullscreen.BringToFront();
-            previewFrame.Controls.Add(preview); card.Controls.Add(previewFrame); card.Controls.Add(head);
+            preview.Controls.Add(previewPlaceholder); previewHost.Controls.Add(preview); card.Controls.Add(previewHost);
             return card;
         }
 
-        private void PositionFullscreenButton()
+        private void LayoutPreviewSurface()
         {
-            fullscreen.Location = new Point(Math.Max(8, preview.ClientSize.Width - fullscreen.Width - 12), Math.Max(8, preview.ClientSize.Height - fullscreen.Height - 12));
-            fullscreen.BringToFront();
+            int availableWidth = Math.Max(1, previewHost.ClientSize.Width), availableHeight = Math.Max(1, previewHost.ClientSize.Height);
+            int sourceWidth = capture.Width > 0 ? capture.Width : 4, sourceHeight = capture.Height > 0 ? capture.Height : 3;
+            double aspect = (double)sourceWidth / sourceHeight; int width = availableWidth, height = (int)Math.Round(width / aspect);
+            if (height > availableHeight) { height = availableHeight; width = (int)Math.Round(height * aspect); }
+            width = Math.Max(1, width); height = Math.Max(1, height);
+            preview.Bounds = new Rectangle((availableWidth - width) / 2, (availableHeight - height) / 2, width, height);
         }
         private Control BuildLogHeader()
         {
@@ -242,7 +243,7 @@ namespace Visupra7
             detect.Click += delegate { DetectDevices(); }; devices.SelectedIndexChanged += delegate { LoadFormats(); }; start.Click += async delegate { await StartCamera(); };
             stop.Click += async delegate { if (recorder.IsRecording) await StopRecording(); else await StopCamera(); }; screenshot.Click += async delegate { await TakeScreenshot(); }; record.Click += delegate { StartRecording(); };
             stopRecord.Click += async delegate { await StopRecording(); }; toggleLog.Click += delegate { ToggleLog(); }; fullscreen.Click += delegate { OpenFullscreen(); }; language.SelectedIndexChanged += delegate { ChangeLanguage(); };
-            preview.Resize += delegate { capture.ResizePreview(preview.ClientSize.Width, preview.ClientSize.Height); PositionFullscreenButton(); }; preview.DoubleClick += delegate { OpenFullscreen(); }; FormClosing += OnClosing;
+            previewHost.Resize += delegate { LayoutPreviewSurface(); }; preview.Resize += delegate { capture.ResizePreview(preview.ClientSize.Width, preview.ClientSize.Height); }; preview.DoubleClick += delegate { OpenFullscreen(); }; FormClosing += OnClosing;
             UpdateToolTips();
         }
 
@@ -255,7 +256,8 @@ namespace Visupra7
         private void OpenFullscreen()
         {
             if (!capture.IsRunning || fullscreenWindow != null) return;
-            FullscreenPreviewForm window = new FullscreenPreviewForm(StartRecording, StopRecording, TakeScreenshot);
+            double aspect = capture.Width > 0 && capture.Height > 0 ? (double)capture.Width / capture.Height : 4.0 / 3.0;
+            FullscreenPreviewForm window = new FullscreenPreviewForm(StartRecording, StopRecording, TakeScreenshot, aspect);
             fullscreenWindow = window;
             window.PreviewSizeChanged += delegate(int w, int h) { capture.ResizePreview(w, h); };
             window.FormClosing += delegate
@@ -290,7 +292,7 @@ namespace Visupra7
             if (!capture.IsRunning) formatInfo.Text = Localization.T("NoSignal"); toggleLog.Text = Localization.T(logExpanded ? "Hide" : "Show");
         }
 
-        private void ToggleLog() { logExpanded = !logExpanded; logCard.Height = logExpanded ? 116 : 30; toggleLog.Text = Localization.T(logExpanded ? "Hide" : "Show"); }
+        private void ToggleLog() { logExpanded = !logExpanded; logCard.Height = logExpanded ? 90 : 30; toggleLog.Text = Localization.T(logExpanded ? "Hide" : "Show"); }
 
         private async void DetectDevices()
         {
@@ -318,7 +320,7 @@ namespace Visupra7
             {
                 await Task.Yield();
                 capture.Start(device, format, preview.Handle, preview.ClientSize.Width, preview.ClientSize.Height);
-                previewPlaceholder.Visible = false; fullscreen.BringToFront(); formatInfo.Text = capture.Width + " × " + capture.Height + "  /  " + capture.Fps + " FPS";
+                previewPlaceholder.Visible = false; LayoutPreviewSurface(); formatInfo.Text = capture.Width + " × " + capture.Height + "  /  " + capture.Fps + " FPS";
                 SetConnectionState(Localization.T("Live"), Success); SetState(Localization.T("PreviewActive", device.Name));
             }
             catch (Exception ex)
@@ -402,7 +404,7 @@ namespace Visupra7
             protected override void OnPaint(PaintEventArgs e) { base.OnPaint(e); using (var pen = new Pen(Border)) e.Graphics.DrawRectangle(pen, 0, 0, Width - 1, Height - 1); }
         }
 
-        private enum ButtonIcon { None, Play, Record, Stop, Capture, Fullscreen }
+        private enum ButtonIcon { None, Search, Play, Record, Stop, Capture, Fullscreen }
 
         private sealed class ModernButton : Button
         {
@@ -433,7 +435,8 @@ namespace Visupra7
                 using (var pen = new Pen(color, 2F)) using (var brush = new SolidBrush(color))
                 {
                     pen.StartCap = LineCap.Round; pen.EndCap = LineCap.Round; pen.LineJoin = LineJoin.Round;
-                    if (Icon == ButtonIcon.Play) graphics.FillPolygon(brush, new[] { new Point(cx - 6, cy - 9), new Point(cx + 9, cy), new Point(cx - 6, cy + 9) });
+                    if (Icon == ButtonIcon.Search) { graphics.DrawEllipse(pen, cx - 9, cy - 9, 13, 13); graphics.DrawLine(pen, cx + 1, cy + 1, cx + 9, cy + 9); }
+                    else if (Icon == ButtonIcon.Play) graphics.FillPolygon(brush, new[] { new Point(cx - 6, cy - 9), new Point(cx + 9, cy), new Point(cx - 6, cy + 9) });
                     else if (Icon == ButtonIcon.Record) graphics.FillEllipse(brush, cx - 8, cy - 8, 16, 16);
                     else if (Icon == ButtonIcon.Stop) graphics.FillRectangle(brush, cx - 7, cy - 7, 14, 14);
                     else if (Icon == ButtonIcon.Capture)

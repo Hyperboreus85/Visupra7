@@ -9,6 +9,7 @@ namespace Visupra7
     internal sealed class FullscreenPreviewForm : Form
     {
         private readonly Panel previewHost = new Panel();
+        private readonly double previewAspect;
         private readonly Action startRecording;
         private readonly Func<Task> stopRecording;
         private readonly Func<Task> takeSnapshot;
@@ -18,18 +19,18 @@ namespace Visupra7
         public IntPtr PreviewHandle { get { return previewHost.Handle; } }
         public Size PreviewSize { get { return previewHost.ClientSize; } }
 
-        public FullscreenPreviewForm(Action onStartRecording, Func<Task> onStopRecording, Func<Task> onTakeSnapshot)
+        public FullscreenPreviewForm(Action onStartRecording, Func<Task> onStopRecording, Func<Task> onTakeSnapshot, double aspectRatio)
         {
-            startRecording = onStartRecording; stopRecording = onStopRecording; takeSnapshot = onTakeSnapshot;
+            startRecording = onStartRecording; stopRecording = onStopRecording; takeSnapshot = onTakeSnapshot; previewAspect = aspectRatio > 0 ? aspectRatio : 4.0 / 3.0;
             Text = "Visupra7 · Anteprima a schermo intero"; FormBorderStyle = FormBorderStyle.None; StartPosition = FormStartPosition.Manual;
             BackColor = Color.Black; KeyPreview = true; ShowInTaskbar = false; TopMost = true; AutoScaleMode = AutoScaleMode.Dpi;
-            previewHost.Dock = DockStyle.Fill; previewHost.BackColor = Color.Black; Controls.Add(previewHost);
+            previewHost.BackColor = Color.Black; Controls.Add(previewHost);
             KeyDown += OnFullscreenKeyDown; Resize += OnFullscreenResize;
         }
 
         protected override void OnShown(EventArgs e)
         {
-            Bounds = Screen.FromControl(Owner ?? this).Bounds; base.OnShown(e);
+            Bounds = Screen.FromControl(Owner ?? this).Bounds; LayoutPreviewHost(); base.OnShown(e);
             overlay = new FullscreenControlOverlay(startRecording, stopRecording, takeSnapshot, Close);
             overlay.Show(this); PositionOverlay(); previewHost.Focus();
         }
@@ -46,9 +47,16 @@ namespace Visupra7
 
         private void OnFullscreenResize(object sender, EventArgs e)
         {
-            PositionOverlay(); var handler = PreviewSizeChanged; if (handler != null) handler(previewHost.ClientSize.Width, previewHost.ClientSize.Height);
+            LayoutPreviewHost(); PositionOverlay(); var handler = PreviewSizeChanged; if (handler != null) handler(previewHost.ClientSize.Width, previewHost.ClientSize.Height);
         }
 
+        private void LayoutPreviewHost()
+        {
+            int availableWidth = Math.Max(1, ClientSize.Width), availableHeight = Math.Max(1, ClientSize.Height);
+            int width = availableWidth, height = (int)Math.Round(width / previewAspect);
+            if (height > availableHeight) { height = availableHeight; width = (int)Math.Round(height * previewAspect); }
+            previewHost.Bounds = new Rectangle((availableWidth - width) / 2, (availableHeight - height) / 2, Math.Max(1, width), Math.Max(1, height));
+        }
         private void PositionOverlay()
         {
             if (overlay == null || overlay.IsDisposed) return;
