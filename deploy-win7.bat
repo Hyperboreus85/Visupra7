@@ -36,6 +36,17 @@ if errorlevel 1 (
   echo ERRORE: verifica binaria dell'eseguibile distribuito fallita.
   exit /b 1
 )
+if exist "dist\Tools\ffmpeg.exe" (
+  if not exist "\\192.168.10.123\Visupra7\Tools\ffmpeg.exe" (
+    echo ERRORE: ffmpeg.exe non presente a destinazione dopo Robocopy.
+    exit /b 1
+  )
+  fc /b "dist\Tools\ffmpeg.exe" "\\192.168.10.123\Visupra7\Tools\ffmpeg.exe" >nul
+  if errorlevel 1 (
+    echo ERRORE: verifica binaria di ffmpeg.exe fallita.
+    exit /b 1
+  )
+)
 echo Deploy completato in \\192.168.10.123\Visupra7
 exit /b 0
 

@@ -10,7 +10,7 @@ L'interfaccia è disponibile in inglese e italiano. Il primo avvio usa l'inglese
 
 Eseguire `deploy-win7.bat`. La build non richiede Visual Studio o NuGet: usa il compilatore .NET Framework installato. Lo script prepara `dist` e la sincronizza in `\\192.168.10.123\Visupra7`.
 
-La registrazione richiede una build **x86 compatibile con Windows 7** di FFmpeg, collocata in `Tools\ffmpeg.exe`. L'app non usa FFmpeg dal PATH. In assenza di FFmpeg, anteprima e screenshot restano disponibili e il tentativo di registrazione mostra un errore leggibile.
+La registrazione usa la build Win32 statica di FFmpeg inclusa in `Tools\ffmpeg.exe`; l'app non usa FFmpeg dal PATH. Versione, provenienza, licenza e checksum sono documentati in `Tools\README.md`. In assenza del binario, anteprima e screenshot restano disponibili e il tentativo di registrazione mostra un errore leggibile.
 
 Le impostazioni sono in `App.config`: qualità JPEG, CRF/preset H.264, limite FPS, risoluzione preferita, directory e predisposizione della futura durata segmento (`SegmentMinutes`, attualmente 0/non attiva).
 
