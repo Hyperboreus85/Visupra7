@@ -36,6 +36,7 @@ namespace Visupra7
         private readonly ModernButton record = new ModernButton();
         private readonly ModernButton stopRecord = new ModernButton();
         private readonly ModernButton toggleLog = new ModernButton();
+        private readonly ModernButton fullscreen = new ModernButton();
         private readonly Panel preview = new Panel();
         private readonly Label previewPlaceholder = new Label();
         private readonly TextBox logBox = new TextBox();
@@ -50,6 +51,7 @@ namespace Visupra7
         private List<WebcamDevice> deviceList = new List<WebcamDevice>();
         private bool closing;
         private bool logExpanded = true;
+        private FullscreenPreviewForm fullscreenWindow;
 
         public MainForm(AppSettings appSettings, Logger logger)
         {
@@ -157,8 +159,8 @@ namespace Visupra7
             var card = new CardPanel { Dock = DockStyle.Fill, BackColor = Surface, Padding = new Padding(1) };
             var head = new Panel { Dock = DockStyle.Top, Height = 50, BackColor = Surface, Padding = new Padding(16, 0, 16, 0) };
             var title = MakeLabel("ANTEPRIMA", 9F, FontStyle.Bold, TextMain); title.Dock = DockStyle.Left; title.Width = 100; title.TextAlign = ContentAlignment.MiddleLeft;
-            formatInfo.Text = "NESSUN SEGNALE"; formatInfo.Font = new Font("Segoe UI", 8F, FontStyle.Bold); formatInfo.ForeColor = TextMuted; formatInfo.Dock = DockStyle.Right; formatInfo.Width = 270; formatInfo.TextAlign = ContentAlignment.MiddleRight;
-            head.Controls.Add(formatInfo); head.Controls.Add(title);
+            formatInfo.Text = "NESSUN SEGNALE"; formatInfo.Font = new Font("Segoe UI", 8F, FontStyle.Bold); formatInfo.ForeColor = TextMuted; formatInfo.Dock = DockStyle.Right; formatInfo.Width = 190; formatInfo.TextAlign = ContentAlignment.MiddleRight;
+            fullscreen.Text = "SCHERMO INTERO"; fullscreen.Dock = DockStyle.Right; fullscreen.Width = 132; fullscreen.BaseColor = Surface; fullscreen.HoverColor = SurfaceLight; fullscreen.ForeColor = TextMuted;
 
             var previewFrame = new Panel { Dock = DockStyle.Fill, BackColor = Surface, Padding = new Padding(10, 0, 10, 10) };
             preview.Dock = DockStyle.Fill; preview.BackColor = Color.FromArgb(4, 6, 9);
@@ -216,10 +218,32 @@ namespace Visupra7
         {
             detect.Click += delegate { DetectDevices(); }; devices.SelectedIndexChanged += delegate { LoadFormats(); }; start.Click += async delegate { await StartCamera(); };
             stop.Click += async delegate { await StopCamera(); }; screenshot.Click += async delegate { await TakeScreenshot(); }; record.Click += delegate { StartRecording(); };
-            stopRecord.Click += async delegate { await StopRecording(); }; toggleLog.Click += delegate { ToggleLog(); };
-            preview.Resize += delegate { capture.ResizePreview(preview.ClientSize.Width, preview.ClientSize.Height); }; FormClosing += OnClosing;
+            stopRecord.Click += async delegate { await StopRecording(); }; toggleLog.Click += delegate { ToggleLog(); }; fullscreen.Click += delegate { OpenFullscreen(); };
+            preview.Resize += delegate { capture.ResizePreview(preview.ClientSize.Width, preview.ClientSize.Height); }; preview.DoubleClick += delegate { OpenFullscreen(); }; FormClosing += OnClosing;
             tips.SetToolTip(detect, "Aggiorna l'elenco dei dispositivi DirectShow"); tips.SetToolTip(screenshot, "Salva il frame corrente in formato JPEG"); tips.SetToolTip(record, "Registra MP4 H.264 tramite FFmpeg");
         }
+
+        private void OpenFullscreen()
+        {
+            if (!capture.IsRunning || fullscreenWindow != null) return;
+            FullscreenPreviewForm window = new FullscreenPreviewForm(StartRecording, StopRecording, TakeScreenshot);
+            fullscreenWindow = window;
+            window.PreviewSizeChanged += delegate(int w, int h) { capture.ResizePreview(w, h); };
+            window.FormClosing += delegate
+            {
+                try { if (capture.IsRunning) capture.AttachPreview(preview.Handle, preview.ClientSize.Width, preview.ClientSize.Height); }
+                catch (Exception ex) { log.Error("Ripristino anteprima dalla modalità fullscreen fallito", ex); }
+                fullscreenWindow = null; SetState(capture.IsRunning ? "Anteprima ripristinata" : "Webcam ferma");
+            };
+            try
+            {
+                window.Show(this); capture.AttachPreview(window.PreviewHandle, window.PreviewSize.Width, window.PreviewSize.Height); window.Activate();
+                SetState("Modalità schermo intero · Esc o F11 per uscire");
+            }
+            catch (Exception ex) { log.Error("Apertura modalità fullscreen fallita", ex); window.Close(); MessageBox.Show(DialogOwner, ex.Message, "Schermo intero", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+        }
+
+        private IWin32Window DialogOwner { get { return fullscreenWindow == null ? (IWin32Window)this : fullscreenWindow; } }
 
         private void ToggleLog() { logExpanded = !logExpanded; logCard.Height = logExpanded ? 174 : 42; toggleLog.Text = logExpanded ? "NASCONDI" : "MOSTRA"; }
 
@@ -256,7 +280,7 @@ namespace Visupra7
             }
             catch (Exception ex)
             {
-                log.Error("Avvio webcam fallito (dispositivo occupato, scollegato o formato non supportato)", ex); MessageBox.Show(this, "Impossibile avviare la webcam.\r\n\r\n" + ex.Message, "Visupra7", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                log.Error("Avvio webcam fallito (dispositivo occupato, scollegato o formato non supportato)", ex); MessageBox.Show(DialogOwner, "Impossibile avviare la webcam.\r\n\r\n" + ex.Message, "Visupra7", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 SetConnectionState("ERRORE", Danger); SetState("Errore avvio webcam");
             }
             finally { SetBusy(false); UpdateButtons(); }
@@ -264,16 +288,16 @@ namespace Visupra7
 
         private async Task StopCamera()
         {
-            SetBusy(true); if (recorder.IsRecording) await StopRecording(); SetState("Arresto webcam..."); await Task.Run(delegate { capture.Stop(); });
+            if (fullscreenWindow != null) fullscreenWindow.Close(); SetBusy(true); if (recorder.IsRecording) await StopRecording(); SetState("Arresto webcam..."); await Task.Run(delegate { capture.Stop(); });
             previewPlaceholder.Visible = true; previewPlaceholder.BringToFront(); formatInfo.Text = "NESSUN SEGNALE"; SetConnectionState("OFFLINE", TextMuted); SetState("Webcam ferma"); SetBusy(false); UpdateButtons();
         }
 
         private async Task TakeScreenshot()
         {
-            FrameData frame = capture.GetLatestFrame(); if (frame == null) { MessageBox.Show(this, "Non è ancora disponibile un frame.", "Visupra7", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            FrameData frame = capture.GetLatestFrame(); if (frame == null) { MessageBox.Show(DialogOwner, "Non è ancora disponibile un frame.", "Visupra7", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             screenshot.Enabled = false;
             try { string path = await Task.Run(delegate { return SaveJpeg(frame); }); log.Info("Screenshot salvato: " + path); SetState("Screenshot salvato · " + Path.GetFileName(path)); }
-            catch (Exception ex) { log.Error("Screenshot fallito", ex); MessageBox.Show(this, ex.Message, "Errore screenshot", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { log.Error("Screenshot fallito", ex); MessageBox.Show(DialogOwner, ex.Message, "Errore screenshot", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             finally { screenshot.Enabled = true; }
         }
 
@@ -294,20 +318,20 @@ namespace Visupra7
         private void StartRecording()
         {
             try { FrameData frame = capture.GetLatestFrame(); if (frame == null) throw new InvalidOperationException("Attendere il primo frame della webcam."); recorder.Start(frame.Width, frame.Height, capture.Fps, frame.BottomUp); SetState("Registrazione in corso · " + Path.GetFileName(recorder.OutputPath)); }
-            catch (Exception ex) { log.Error("Avvio registrazione fallito", ex); MessageBox.Show(this, ex.Message, "Registrazione non avviata", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { log.Error("Avvio registrazione fallito", ex); MessageBox.Show(DialogOwner, ex.Message, "Registrazione non avviata", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             UpdateButtons();
         }
 
         private async Task StopRecording()
         {
             if (!recorder.IsRecording) return; stopRecord.Enabled = false; SetState("Finalizzazione MP4..."); RecordingResult result = await recorder.StopAsync();
-            if (result.Success) SetState("Registrazione salvata · " + Path.GetFileName(result.Path)); else { SetState("Registrazione fallita"); MessageBox.Show(this, result.Error, "Errore registrazione", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            if (result.Success) SetState("Registrazione salvata · " + Path.GetFileName(result.Path)); else { SetState("Registrazione fallita"); MessageBox.Show(DialogOwner, result.Error, "Errore registrazione", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
             UpdateButtons();
         }
 
         private void TimerTick(object sender, EventArgs e)
         {
-            rec.Visible = recorder.IsRecording; elapsed.Text = recorder.IsRecording ? recorder.Elapsed.ToString(@"hh\:mm\:ss") : "00:00:00";
+            rec.Visible = recorder.IsRecording; elapsed.Text = recorder.IsRecording ? recorder.Elapsed.ToString(@"hh\:mm\:ss") : "00:00:00"; if (fullscreenWindow != null) fullscreenWindow.SetRecording(recorder.IsRecording, recorder.Elapsed);
             if (capture.IsRunning && capture.PollDeviceLost()) { log.Warn("Perdita dispositivo o completamento inatteso del graph"); SetState("Webcam scollegata o flusso interrotto"); SetConnectionState("SEGNALE PERSO", Danger); Task ignoredStop = StopCamera(); }
         }
 
@@ -318,12 +342,12 @@ namespace Visupra7
         private void SetBusy(bool busy) { detect.Enabled = !busy; start.Enabled = !busy; stop.Enabled = !busy; devices.Enabled = !busy; formats.Enabled = !busy; }
         private void UpdateButtons()
         {
-            bool running = capture.IsRunning, recording = recorder.IsRecording; start.Enabled = !running && devices.SelectedItem != null; stop.Enabled = running; screenshot.Enabled = running; record.Enabled = running && !recording; stopRecord.Enabled = recording; detect.Enabled = !running; devices.Enabled = !running; formats.Enabled = !running;
+            bool running = capture.IsRunning, recording = recorder.IsRecording; start.Enabled = !running && devices.SelectedItem != null; stop.Enabled = running; screenshot.Enabled = running; record.Enabled = running && !recording; stopRecord.Enabled = recording; fullscreen.Enabled = running; detect.Enabled = !running; devices.Enabled = !running; formats.Enabled = !running;
         }
 
         private void OnClosing(object sender, FormClosingEventArgs e)
         {
-            if (closing) return; closing = true; timer.Stop(); Enabled = false; log.Info("Chiusura richiesta; rilascio registrazione e webcam");
+            if (closing) return; closing = true; timer.Stop(); if (fullscreenWindow != null) fullscreenWindow.Close(); Enabled = false; log.Info("Chiusura richiesta; rilascio registrazione e webcam");
             try { if (recorder.IsRecording) recorder.StopAsync().Wait(18000); } catch (Exception ex) { log.Error("Errore chiusura registrazione", ex); }
             try { capture.Stop(); } catch (Exception ex) { log.Error("Errore chiusura webcam", ex); }
             foreach (WebcamDevice d in deviceList) d.Dispose(); recorder.Dispose(); capture.Dispose(); log.LineWritten -= AppendLog;

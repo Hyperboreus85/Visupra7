@@ -30,7 +30,7 @@
     <Compile Include="Program.cs" /><Compile Include="AppSettings.cs" />
     <Compile Include="Logger.cs" /><Compile Include="DirectShowInterop.cs" />
     <Compile Include="MediaEventInterop.cs" /><Compile Include="WebcamCapture.cs" /><Compile Include="FfmpegRecorder.cs" />
-    <Compile Include="MainForm.cs" />
+    <Compile Include="FullscreenPreviewForm.cs" /><Compile Include="MainForm.cs" />
   </ItemGroup>
   <ItemGroup><None Include="App.config" /></ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

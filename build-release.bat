@@ -7,7 +7,7 @@ if not exist "%CSC%" (
   exit /b 1
 )
 if not exist "bin\Release" mkdir "bin\Release"
-"%CSC%" /nologo /target:winexe /platform:x86 /optimize+ /debug:pdbonly /out:"bin\Release\Visupra7.exe" /reference:System.dll /reference:System.Core.dll /reference:System.Configuration.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll Properties\AssemblyInfo.cs AppSettings.cs Logger.cs DirectShowInterop.cs MediaEventInterop.cs WebcamCapture.cs FfmpegRecorder.cs MainForm.cs Program.cs
+"%CSC%" /nologo /target:winexe /platform:x86 /optimize+ /debug:pdbonly /out:"bin\Release\Visupra7.exe" /reference:System.dll /reference:System.Core.dll /reference:System.Configuration.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll Properties\AssemblyInfo.cs AppSettings.cs Logger.cs DirectShowInterop.cs MediaEventInterop.cs WebcamCapture.cs FfmpegRecorder.cs FullscreenPreviewForm.cs MainForm.cs Program.cs
 if errorlevel 1 (
   echo ERRORE: build Release x86 fallita.
   exit /b 1

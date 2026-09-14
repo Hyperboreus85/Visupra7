@@ -2,6 +2,8 @@
 
 Applicazione WinForms x86 per Windows 7 SP1 e .NET Framework 4.8. Usa DirectShow nativo per webcam/anteprima, JPEG per gli screenshot e un processo FFmpeg isolato con pipe e coda limitata per MP4 H.264.
 
+L'anteprima supporta la modalità a schermo intero tramite pulsante o doppio clic. In fullscreen rimane disponibile un overlay sempre visibile con REC, STOP, acquisizione immagine, durata registrazione e uscita tramite Esc/F11.
+
 ## Build e deploy
 
 Eseguire `deploy-win7.bat`. La build non richiede Visual Studio o NuGet: usa il compilatore .NET Framework installato. Lo script prepara `dist` e la sincronizza in `\\win7\Dev\Visupra7`.

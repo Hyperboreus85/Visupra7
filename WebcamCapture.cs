@@ -161,6 +161,17 @@ namespace Visupra7
         }
 
         public FrameData GetLatestFrame() { lock (frameSync) { return latest == null ? null : new FrameData((byte[])latest.Buffer.Clone(), latest.Width, latest.Height, latest.Stride, latest.BottomUp); } }
+        public void AttachPreview(IntPtr ownerHandle, int w, int h)
+        {
+            if (videoWindow == null) throw new InvalidOperationException("Anteprima DirectShow non attiva.");
+            const int WS_CHILD = 0x40000000, WS_CLIPSIBLINGS = 0x04000000, WS_CLIPCHILDREN = 0x02000000;
+            DsUtil.Check(videoWindow.put_Visible(0), "Nascondi anteprima");
+            DsUtil.Check(videoWindow.put_Owner(ownerHandle), "Nuovo owner anteprima");
+            DsUtil.Check(videoWindow.put_WindowStyle(WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN), "Stile anteprima");
+            DsUtil.Check(videoWindow.SetWindowPosition(0, 0, Math.Max(1, w), Math.Max(1, h)), "Dimensione anteprima");
+            DsUtil.Check(videoWindow.put_Visible(-1), "Mostra anteprima");
+        }
+
         public void ResizePreview(int w, int h) { if (videoWindow != null) try { videoWindow.SetWindowPosition(0, 0, Math.Max(1, w), Math.Max(1, h)); } catch { } }
         public bool PollDeviceLost()
         {
